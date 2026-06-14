@@ -118,8 +118,8 @@ header.topbar{
 }
 /* キャンバスも濃藍の青海波（雲・波つき） */
 #stage.seigaiha{--B:#1c508f;--A:#cfe1f4;}
-/* 背景ひかえめ（樹形を読みやすく） */
-#stage.calm.seigaiha{--B:#eef1f6;--A:#e0e6ee;}
+/* 背景ひかえめ（樹形を読みやすく／作業画面の既定） */
+#stage.calm.seigaiha{--B:#eef3f9;--A:#dbe6f2;}
 #stage.calm #seascape{display:none;}
 #stage.calm .link-path{stroke:rgba(40,32,22,.5);}
 #stage.calm .link-path.adopt{stroke:rgba(40,32,22,.5);}
@@ -1785,13 +1785,14 @@ $("#importFile").addEventListener("change",e=>{
   rd.readAsText(f); e.target.value="";
 });
 $("#menuPrivacy").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openOverlay($("#privacyOverlay")); });
-/* 背景をひかえめに（可読性優先）。設定は端末に保存 */
-function applyCalm(){ const on=localStorage.getItem("kinship.calm")==="1"; stage.classList.toggle("calm",on);
-  const b=$("#menuCalm"); if(b) b.textContent = on? "背景を青海波に戻す" : "背景をひかえめにする"; }
+/* 作業画面の背景。既定は「ひかえめ（読みやすい）」。設定は端末に保存 */
+function calmOn(){ return localStorage.getItem("kinship.calm")!=="0"; }
+function applyCalm(){ const on=calmOn(); stage.classList.toggle("calm",on);
+  const b=$("#menuCalm"); if(b) b.textContent = on? "背景を青海波（濃いめ）にする" : "背景をひかえめにする"; }
 $("#menuCalm").addEventListener("click",()=>{
-  const on=localStorage.getItem("kinship.calm")==="1";
+  const on=calmOn();
   try{ localStorage.setItem("kinship.calm", on?"0":"1"); }catch(e){}
-  applyCalm(); toast(on?"青海波の背景に戻しました":"背景をひかえめにしました");
+  applyCalm(); toast(on?"背景を青海波にしました":"背景をひかえめにしました");
 });
 
 /* =========================================================

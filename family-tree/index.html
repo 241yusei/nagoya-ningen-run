@@ -155,14 +155,21 @@ header.topbar{
 .detail-head{display:flex;align-items:center;gap:14px;margin-bottom:2px;}
 .detail-crest{width:56px;height:56px;flex:none;color:var(--accent);}
 .detail-crest svg{display:block;width:100%;height:100%;}
-.crest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 4px;}
+.crest-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;}
+.crest-tab{font-family:inherit;font-size:13.5px;font-weight:600;color:var(--sub);background:var(--bg2);
+  border:1px solid var(--hair);border-radius:9px;padding:8px 14px;cursor:pointer;transition:.2s var(--ease);}
+.crest-tab:hover{color:var(--ink);}
+.crest-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.crest-count{font-size:12px;color:var(--faint);margin:0 0 10px;letter-spacing:.04em;}
+.crest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 4px;}
 @media(max-width:480px){.crest-grid{grid-template-columns:repeat(3,1fr);}}
 .crest-opt{aspect-ratio:1/1;border:1px solid var(--hair);border-radius:12px;background:var(--surface);
-  cursor:pointer;padding:11px;color:var(--ink);transition:.2s var(--ease);}
+  cursor:pointer;padding:11px;color:var(--ink);transition:.18s var(--ease);display:flex;align-items:center;justify-content:center;}
 .crest-opt:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:var(--line);}
 .crest-opt.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);color:var(--accent);}
 .crest-opt svg{display:block;width:100%;height:100%;}
-.crest-cap{font-size:13px;color:var(--sub);margin:0 0 14px;}
+.crest-opt.none-opt .none-label{font-size:12px;color:var(--sub);text-align:center;line-height:1.4;font-weight:600;}
+.crest-cap{font-size:13px;color:var(--sub);margin:0 0 14px;line-height:1.7;}
 /* the quick add buttons on hover */
 .card .quick{position:absolute;inset:auto 0 0 0;display:flex;gap:2px;justify-content:center;
   background:linear-gradient(0deg,rgba(255,255,255,.96),rgba(255,255,255,0));
@@ -602,7 +609,9 @@ header.topbar{
   <div class="sheet" role="dialog" aria-modal="true">
     <div class="hd"><h2 id="crestTitle">家紋を選ぶ</h2><button class="x" data-close>×</button></div>
     <div class="bd">
-      <p class="crest-cap" id="crestCap">現存する家紋の体系をもとに作った、オリジナルの家紋です。お好きなものを選んでください。この苗字のすべての方に反映されます。</p>
+      <p class="crest-cap" id="crestCap">現存する家紋の体系を学び、家紋デザイナー・画家・現代アーティストの視点で起こしたオリジナルです。歴史ある趣から現代的なものまで、お好きな一つを選べます（既定は「家紋なし」）。</p>
+      <div class="crest-tabs" id="crestTabs"></div>
+      <p class="crest-count" id="crestCount"></p>
       <div class="crest-grid" id="crestGrid"></div>
     </div>
   </div>
@@ -622,7 +631,7 @@ header.topbar{
       <div class="step"><div class="num serif">6</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
       <div class="step"><div class="num serif">7</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
       <div class="step"><div class="num serif">8</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
-      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。なお、<b>苗字ごとに、その家だけの「家紋」が自動で作られます</b>（名前にふれて「<b>家紋を選ぶ</b>」から、十数種の候補からお好みのものに変更できます）。家紋はカードや一覧、書き出した画像にも入ります。入力した内容は、この端末の中に自動で保存されます。</div>
+      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。なお、<b>家紋は既定では付きません</b>。名前にふれて「<b>家紋を選ぶ</b>」を押すと、伝統紋・細線紋・現代紋など<b>数百種</b>のオリジナル家紋から、苗字ごとにお好みの一つを選べます（カードや一覧、書き出した画像にも反映）。入力した内容は、この端末の中に自動で保存されます。</div>
     </div>
   </div>
 </div>
@@ -770,60 +779,100 @@ const MOTIF={
   katabami:()=>_rep(3,`<path d="M50 47 C43 41 36 33 41 26 C44 22 50 24 50 31 C50 24 56 22 59 26 C64 33 57 41 50 47 Z"/>`),// 片喰
   kuyou:()=>_rep(8,_circ(50,22,4.6))+_circ(50,50,9),                                                            // 九曜
   ken:()=>_rep(4,`<ellipse cx="50" cy="26" rx="7" ry="12"/>`)+_rep(4,`<polygon points="50,16 53,40 47,40"/>`,45),// 剣花
-  ya:()=>_rep(3,`<polygon points="50,15 59,30 52,28 52,42 48,42 48,28 41,30"/>`),                               // 矢（沢瀉風）
+  ya:()=>_rep(3,`<polygon points="50,15 59,30 52,28 52,42 48,42 48,28 41,30"/>`),                               // 矢
   igeta:()=>`<rect x="39" y="24" width="4.2" height="52"/><rect x="56.8" y="24" width="4.2" height="52"/><rect x="24" y="39" width="52" height="4.2"/><rect x="24" y="56.8" width="52" height="4.2"/>`,// 井桁
   ougi:()=>`<path d="M50 71 L26.7 33.7 A44 44 0 0 1 73.3 33.7 Z"/>`+_circ(50,70,4),                             // 扇
   mokkou:()=>_rep(4,`<ellipse cx="50" cy="32" rx="15" ry="20" fill="none" stroke="currentColor" stroke-width="4.5"/>`)+_rep(5,`<ellipse cx="50" cy="42" rx="3.4" ry="5.5"/>`)+_circ(50,50,3.2),// 木瓜
   tomoe:()=>_rep(3,`<path d="M50 50 C50 32 58 25 66 30 C73 35 71 46 62 47 C56 47.5 52 48.5 50 50 Z"/>`),         // 三つ巴
   wachigai:()=>`<circle cx="41" cy="50" r="19" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="59" cy="50" r="19" fill="none" stroke="currentColor" stroke-width="4.5"/>`,// 輪違い
+  meyui:()=>_rep(4,`<rect x="44" y="15" width="12" height="12"/>`)+`<rect x="44" y="44" width="12" height="12"/>`, // 目結
+  hikiryo:()=>`<rect x="20" y="33" width="60" height="8"/><rect x="20" y="46" width="60" height="8"/><rect x="20" y="59" width="60" height="8"/>`, // 三つ引
+  masu:()=>`<rect x="26" y="26" width="48" height="48" fill="none" stroke="currentColor" stroke-width="4.5"/><rect x="38" y="38" width="24" height="24" fill="none" stroke="currentColor" stroke-width="4.5"/>`, // 枡
+  uroko:()=>_rep(3,`<polygon points="50,18 61,41 39,41"/>`),                                                    // 鱗
+  kuginuki:()=>`<rect x="26" y="26" width="48" height="48" rx="6" fill="none" stroke="currentColor" stroke-width="8"/><rect x="43" y="43" width="14" height="14"/>`, // 釘抜
+  concentric:()=>`<circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="4"/>`+_circ(50,50,6), // 同心円（現代）
+  dotgrid:()=>{ let s=""; for(let r=0;r<3;r++)for(let c=0;c<3;c++) s+=_circ(34+c*16,34+r*16,5); return s; },     // 点格子（現代）
+  crescent:()=>`<path d="M58 18 A32 32 0 1 0 58 82 A24 24 0 1 1 58 18 Z"/>`,                                     // 月
+  nami:()=>`<path d="M16 58 Q33 38 50 58 T84 58" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><path d="M16 44 Q33 24 50 44 T84 44" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`, // 波
 };
 const MOTIF_NAMES=Object.keys(MOTIF);
 const ENC={
   none:()=>"",
   maru:()=>`<circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="4"/>`,
   futae:()=>`<circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3.5"/><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1.8"/>`,
+  futomaru:()=>`<circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8"/>`,
   kaku:()=>`<rect x="6" y="6" width="88" height="88" rx="11" fill="none" stroke="currentColor" stroke-width="4"/>`,
   kikkou:()=>{ let p=[]; for(let i=0;i<6;i++){ const a=(-90+i*60)*Math.PI/180; p.push(_f(50+47*Math.cos(a))+','+_f(50+47*Math.sin(a))); } return `<polygon points="${p.join(' ')}" fill="none" stroke="currentColor" stroke-width="4"/>`; },
+  hishiwa:()=>`<polygon points="50,4 96,50 50,96 4,50" fill="none" stroke="currentColor" stroke-width="4"/>`,
   renju:()=>_rep(16,_circ(50,4,2.6))+`<circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="2"/>`,
 };
 const ENC_NAMES=Object.keys(ENC);
-function crestSVGFromDesc(d,color){
-  const c=color||"currentColor";
-  const scale=d.scale || (d.e==="none"?1.16:1.0);
-  const inner=`<g transform="rotate(${d.rot||0} 50 50)"><g transform="translate(50 50) scale(${scale}) translate(-50 -50)">${MOTIF[d.m]()}</g></g>`;
-  return `<svg viewBox="0 0 100 100" width="100%" height="100%" fill="${c}" stroke="none" aria-hidden="true">${ENC[d.e]()}${inner}</svg>`;
+const STYLES=[{id:"solid",label:"伝統紋（陽）"},{id:"kage",label:"細線紋（陰）"},{id:"modern",label:"現代紋"}];
+let _maskN=0;
+function _motifGroup(d){
+  const scale=d.scale||((d.e==="none"||d.style==="modern")?1.12:1.0);
+  return `<g transform="rotate(${d.rot||0} 50 50)"><g transform="translate(50 50) scale(${scale}) translate(-50 -50)">${MOTIF[d.m]()}</g></g>`;
 }
-function _shuffle(arr,r){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function crestCandidates(name){
-  const r=mulberry32(hashStr("家紋候補:"+(name||"")));
-  const motifs=_shuffle([...MOTIF_NAMES],r);
-  const out=[], seen=new Set(); let i=0,guard=0;
-  while(out.length<12 && guard<300){
-    guard++;
-    const m=motifs[i%motifs.length]; i++;
-    const e=ENC_NAMES[Math.floor(r()*ENC_NAMES.length)];
-    const rot=[0,15,30,45][Math.floor(r()*4)];
-    const key=m+e+rot; if(seen.has(key)) continue; seen.add(key);
-    out.push({m,e,rot});
+function crestSVGFromDesc(d,color){
+  if(!d || d.none) return "";
+  const c=color||"currentColor";
+  const motif=_motifGroup(d);
+  if(d.style==="kage"){   // 陰紋（細線）
+    return `<svg viewBox="0 0 100 100" width="100%" height="100%" color="${c}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true">${ENC[d.e]()}${motif}</svg>`;
+  }
+  if(d.style==="modern"){ // 現代紋（地に白抜き）
+    const id="mk"+(++_maskN);
+    const plate=(d.e==="kaku")?`<rect x="4" y="4" width="92" height="92" rx="18" fill="white"/>`:`<circle cx="50" cy="50" r="48" fill="white"/>`;
+    return `<svg viewBox="0 0 100 100" width="100%" height="100%" color="${c}" aria-hidden="true"><defs><mask id="${id}"><rect width="100" height="100" fill="black"/>${plate}<g fill="black" stroke="black" stroke-width="3">${motif}</g></mask></defs><rect width="100" height="100" fill="currentColor" mask="url(#${id})"/></svg>`;
+  }
+  return `<svg viewBox="0 0 100 100" width="100%" height="100%" color="${c}" fill="currentColor" stroke="none" aria-hidden="true">${ENC[d.e]()}${motif}</svg>`;
+}
+function crestCatalog(style){
+  const out=[];
+  for(const m of MOTIF_NAMES){
+    if(style==="modern"){ out.push({m,e:"none",style}); out.push({m,e:"kaku",style}); }
+    else for(const e of ENC_NAMES) out.push({m,e,style});
   }
   return out;
 }
-function chosenDesc(name){ return (name && state.crests && state.crests[name]) || crestCandidates(name)[0]; }
-function crestSVG(name,color){ return crestSVGFromDesc(chosenDesc(name),color); }
+function descKey(d){ return d? (d.style+"|"+d.m+"|"+d.e) : "none"; }
+function chosenDesc(name){ return (name && state.crests && state.crests[name]) || null; } // 既定は家紋なし
+function crestSVG(name,color){ const d=chosenDesc(name); return d? crestSVGFromDesc(d,color) : ""; }
+
+let _crestSurname=null, _crestTab="solid";
 function openCrestChooser(surname){
   if(!surname){ toast("先に苗字を入力してください"); return; }
   if(!state.crests) state.crests={};
+  _crestSurname=surname; _crestTab="solid";
   $("#crestTitle").textContent="「"+surname+"」家の家紋を選ぶ";
+  buildCrestTabs(); renderCrestGrid();
+  openOverlay($("#crestOverlay"));
+}
+function buildCrestTabs(){
+  const t=$("#crestTabs"); t.innerHTML="";
+  STYLES.forEach(s=>{
+    const b=el("button","crest-tab"+(s.id===_crestTab?" active":"")); b.textContent=s.label;
+    b.addEventListener("click",()=>{ _crestTab=s.id; buildCrestTabs(); renderCrestGrid(); });
+    t.appendChild(b);
+  });
+}
+function renderCrestGrid(){
   const grid=$("#crestGrid"); grid.innerHTML="";
-  const cur=chosenDesc(surname), curKey=cur.m+cur.e+cur.rot;
-  crestCandidates(surname).forEach(d=>{
+  const cur=chosenDesc(_crestSurname), curKey=descKey(cur);
+  // 家紋なし（既定）
+  const noneBtn=el("button","crest-opt none-opt"+(curKey==="none"?" sel":""));
+  noneBtn.innerHTML=`<span class="none-label">家紋<br>なし</span>`;
+  noneBtn.addEventListener("click",()=>{ delete state.crests[_crestSurname]; save(); render(); closeOverlay($("#crestOverlay")); toast("家紋なしにしました"); });
+  grid.appendChild(noneBtn);
+  const cat=crestCatalog(_crestTab);
+  for(const d of cat){
     const b=el("button","crest-opt");
     b.innerHTML=crestSVGFromDesc(d);
-    if(d.m+d.e+d.rot===curKey) b.classList.add("sel");
-    b.addEventListener("click",()=>{ state.crests[surname]=d; save(); render(); closeOverlay($("#crestOverlay")); toast("「"+surname+"」家の家紋を変えました"); });
+    if(descKey(d)===curKey) b.classList.add("sel");
+    b.addEventListener("click",()=>{ state.crests[_crestSurname]=d; save(); render(); closeOverlay($("#crestOverlay")); toast("「"+_crestSurname+"」家の家紋を設定しました"); });
     grid.appendChild(b);
-  });
-  openOverlay($("#crestOverlay"));
+  }
+  $("#crestCount").textContent=cat.length+"種から選べます";
 }
 function link(aId,bId,field){
   const a=state.persons[aId], b=state.persons[bId];
@@ -1051,7 +1100,8 @@ function updateFilterBar(){
   bar.classList.add("show");
   const mk=(label,val,extra)=>{
     const b=el("button","chip"+(extra?" "+extra:""));
-    if(val){ b.innerHTML='<span class="mon">'+crestSVG(val)+'</span>'; b.appendChild(document.createTextNode(label)); }
+    const svg=val?crestSVG(val):"";
+    if(svg){ b.innerHTML='<span class="mon">'+svg+'</span>'; b.appendChild(document.createTextNode(label)); }
     else b.textContent=label;
     if(val===filterSurname) b.classList.add("active");
     b.addEventListener("click",()=>{ filterSurname=val; render(); fitToScreen(); });
@@ -1132,7 +1182,7 @@ function render(){
     const nm=el("div","nm"); nm.textContent=fullName(p); c.appendChild(nm);
     if(p.yomi){ const y=el("div","yomi"); y.textContent=p.yomi; c.appendChild(y); }
     const meta=el("div","meta"); meta.textContent=lifeShort(p); if(meta.textContent) c.appendChild(meta);
-    if(p.last){ const mon=el("div","mon"); mon.title=p.last+"家の家紋"; mon.innerHTML=crestSVG(p.last); c.appendChild(mon); }
+    if(p.last){ const svg=crestSVG(p.last); if(svg){ const mon=el("div","mon"); mon.title=p.last+"家の家紋"; mon.innerHTML=svg; c.appendChild(mon); } }
 
     // quick-add buttons
     const q=el("div","quick");
@@ -1192,7 +1242,8 @@ function openDetail(id){
   const p=state.persons[id]; if(!p) return;
   const g = p.gender;
   let html="";
-  const crest = p.last? `<span class="detail-crest" title="${esc(p.last)}家の家紋">${crestSVG(p.last)}</span>` : "";
+  const crestSvg = p.last? crestSVG(p.last) : "";
+  const crest = crestSvg? `<span class="detail-crest" title="${esc(p.last)}家の家紋">${crestSvg}</span>` : "";
   html += `<div class="detail-head">${crest}<div><div class="detail-name serif">${esc(fullName(p))}</div>`;
   if(p.yomi) html += `<div class="detail-yomi">${esc(p.yomi)}</div>`;
   html += `</div></div>`;
@@ -1205,7 +1256,7 @@ function openDetail(id){
   html += `</div>`;
 
   html += `<div class="dl">`;
-  if(p.last) html += item("家紋", "「"+p.last+"」から自動生成");
+  if(p.last) html += item("家紋", crestSvg? "設定あり（家紋を選ぶ で変更）" : "なし（家紋を選ぶ で設定）");
   if(p.maiden) html += item("旧姓", p.maiden);
   if(p.birth) html += item("生年月日", fmtDate(p.birth));
   if(p.death) html += item("没年月日", fmtDate(p.death));
@@ -1836,7 +1887,8 @@ async function makePoster(W,H){
     ]); } }catch(e){}
   let crestImg=null;
   const sur=dominantSurname();
-  if(sur){ try{ crestImg=await svgToImage(crestSVG(sur, POSTER_ACCENT), 260); }catch(e){} }
+  const csvg=sur?crestSVG(sur, POSTER_ACCENT):"";
+  if(csvg){ try{ crestImg=await svgToImage(csvg, 260); }catch(e){} }
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   drawPoster(cv.getContext("2d"),W,H,crestImg);
   return cv;

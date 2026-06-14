@@ -199,6 +199,15 @@ header.topbar{
 .export-grid .btn .em{font-weight:700;}
 .export-grid .btn small{color:var(--faint);font-weight:400;margin-left:auto;font-size:12px;}
 
+/* connect + dual-parent forms */
+.seg-wrap{flex-wrap:wrap;}
+.seg-wrap label{flex:1 1 calc(50% - 4px);}
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:520px){.dual{grid-template-columns:1fr;}}
+.dual fieldset{border:1px solid var(--hair);border-radius:14px;padding:14px 14px 2px;margin:0;min-width:0;}
+.dual legend{font-family:"Shippori Mincho",serif;font-weight:700;font-size:15px;padding:0 8px;color:var(--accent);}
+.dual .field{margin-bottom:12px;}
+
 /* ---------- Modal / sheet ---------- */
 .overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
   backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
@@ -417,6 +426,72 @@ header.topbar{
   </div>
 </div>
 
+<!-- ========== Connect existing people modal ========== -->
+<div class="overlay" id="connectOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>すでにいる人とつなげる</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <div class="relctx" id="connectCtx"></div>
+      <div class="field">
+        <label>関係（この人から見て）</label>
+        <div class="seg seg-wrap" id="connectRel">
+          <label><input type="radio" name="crel" value="spouse" checked><span>配偶者</span></label>
+          <label><input type="radio" name="crel" value="child"><span>子ども</span></label>
+          <label><input type="radio" name="crel" value="parent"><span>親</span></label>
+          <label><input type="radio" name="crel" value="sibling"><span>きょうだい</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label id="connectWho">つなげる相手</label>
+        <select id="connectTarget"></select>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" data-close>キャンセル</button>
+        <button type="button" class="btn accent" id="connectDo">つなげる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Register both parents modal ========== -->
+<div class="overlay" id="parentsOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>父母（両親）をまとめて登録</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <div class="relctx" id="parentsCtx"></div>
+      <form id="parentsForm">
+        <div class="dual">
+          <fieldset>
+            <legend>父（父親）</legend>
+            <div class="row2">
+              <div class="field"><label>姓 <span class="hint">任意</span></label><input type="text" name="f_last" autocomplete="off"></div>
+              <div class="field"><label>名</label><input type="text" name="f_first" autocomplete="off"></div>
+            </div>
+            <div class="field"><label>旧姓 <span class="hint">任意</span></label><input type="text" name="f_maiden" autocomplete="off"></div>
+            <div class="field"><label>生年月日 <span class="hint">任意</span></label><input type="date" name="f_birth" min="1850-01-01"></div>
+            <div class="field"><label>没年月日 <span class="hint">任意</span></label><input type="date" name="f_death" min="1850-01-01"></div>
+          </fieldset>
+          <fieldset>
+            <legend>母（母親）</legend>
+            <div class="row2">
+              <div class="field"><label>姓 <span class="hint">任意</span></label><input type="text" name="m_last" autocomplete="off"></div>
+              <div class="field"><label>名</label><input type="text" name="m_first" autocomplete="off"></div>
+            </div>
+            <div class="field"><label>旧姓 <span class="hint">任意</span></label><input type="text" name="m_maiden" autocomplete="off" placeholder="例：佐藤"></div>
+            <div class="field"><label>生年月日 <span class="hint">任意</span></label><input type="date" name="m_birth" min="1850-01-01"></div>
+            <div class="field"><label>没年月日 <span class="hint">任意</span></label><input type="date" name="m_death" min="1850-01-01"></div>
+          </fieldset>
+        </div>
+        <p class="export-hint" style="margin:4px 0 0;">どちらか一方だけの入力でも登録できます。お名前は「名」だけでも大丈夫です。父母として登録され、おふたりは夫婦としてつながります。</p>
+        <div class="form-actions">
+          <button type="button" class="btn" data-close>キャンセル</button>
+          <button type="submit" class="btn accent">登録する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- ========== Guide modal ========== -->
 <div class="overlay" id="guideOverlay">
   <div class="sheet" role="dialog" aria-modal="true">
@@ -424,12 +499,13 @@ header.topbar{
     <div class="bd guide">
       <p class="lead">むずかしい操作はありません。<b>名前を入れていくだけ</b>で、家系図ができあがります。スマホでも、パソコンでも使えます。</p>
       <div class="step"><div class="num serif">1</div><div><h3>最初のひとりを追加します</h3><p>「人を追加」ボタンを押して、ご本人やご先祖など、起点になる方の名前を入れます。生年月日などは、わかる範囲で大丈夫です。</p></div></div>
-      <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。</p></div></div>
-      <div class="step"><div class="num serif">3</div><div><h3>旧姓・生年月日・没年月日（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年月日</b>・<b>没年月日</b>は、わかる範囲で入力してください（不明なら空欄のままでOK）。没年月日を入れた方は自動的に故人として扱われ、名前にふれると年齢・享年が表示されます。</p></div></div>
-      <div class="step"><div class="num serif">4</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
-      <div class="step"><div class="num serif">5</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
-      <div class="step"><div class="num serif">6</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
-      <div class="step"><div class="num serif">7</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
+      <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。「<b>父母（両親）をまとめて登録</b>」で、お父さん・お母さんを一度に登録することもできます。</p></div></div>
+      <div class="step"><div class="num serif">3</div><div><h3>あとから関係をつなげる</h3><p>先にひとりずつ登録した方どうしは、名前にふれて出てくる「<b>すでに登録した人とつなげる</b>」から、あとで関係（配偶者・子ども・親・きょうだい）をつなげられます。</p></div></div>
+      <div class="step"><div class="num serif">4</div><div><h3>旧姓・生年月日・没年月日（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年月日</b>・<b>没年月日</b>は、わかる範囲で入力してください（不明なら空欄のままでOK）。没年月日を入れた方は自動的に故人として扱われ、名前にふれると年齢・享年が表示されます。</p></div></div>
+      <div class="step"><div class="num serif">5</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
+      <div class="step"><div class="num serif">6</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
+      <div class="step"><div class="num serif">7</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
+      <div class="step"><div class="num serif">8</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
       <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。入力した内容は、この端末の中に自動で保存されます。</div>
     </div>
   </div>
@@ -576,6 +652,39 @@ function deletePerson(id){
     const p=state.persons[pid];
     p.parents = p.parents.filter(x=>x!==id);
     p.spouses = p.spouses.filter(x=>x!==id);
+  }
+}
+
+/* is ancId an ancestor of descId? (for cycle guards) */
+function isAncestor(ancId, descId){
+  const seen=new Set(); const stack=[...(state.persons[descId]?state.persons[descId].parents:[])];
+  while(stack.length){
+    const x=stack.pop();
+    if(x===ancId) return true;
+    if(seen.has(x)) continue; seen.add(x);
+    if(state.persons[x]) stack.push(...state.persons[x].parents);
+  }
+  return false;
+}
+
+/* wire a relationship: roleId becomes `rel` of targetId
+   rel = roleId が targetId から見て何にあたるか（配偶者/子ども/親/きょうだい） */
+function wireRelation(rel, roleId, targetId){
+  const t=state.persons[targetId]; if(!t || roleId===targetId) return;
+  if(rel==="spouse"){
+    setSpouses(roleId,targetId);
+  } else if(rel==="child"){
+    addParentLink(roleId,targetId);
+    const sps=t.spouses.filter(x=>state.persons[x]);
+    if(sps.length===1) addParentLink(roleId,sps[0]);   // もう一方の親も自動で
+  } else if(rel==="parent"){
+    addParentLink(targetId,roleId);
+    const existing=t.parents.filter(x=>state.persons[x] && x!==roleId);
+    if(existing.length===1) setSpouses(roleId, existing[0]);  // もう一方の親と夫婦に
+  } else if(rel==="sibling"){
+    // 親を双方向で共有（どちらかが親情報を持っていれば揃える）
+    const ps=new Set([...t.parents, ...(state.persons[roleId]?state.persons[roleId].parents:[])].filter(x=>state.persons[x]));
+    ps.forEach(par=>{ addParentLink(roleId,par); addParentLink(targetId,par); });
   }
 }
 
@@ -916,9 +1025,13 @@ function openDetail(id){
   html += `<div class="rel-actions"><div class="ttl">この人につながる人を追加</div><div class="rel-grid">
     <button class="btn" data-rel="spouse">＋ 配偶者（夫・妻）</button>
     <button class="btn" data-rel="child">＋ 子ども</button>
-    <button class="btn" data-rel="parent">＋ 親（父・母）</button>
+    <button class="btn" data-rel="parent">＋ 親（1人）</button>
     <button class="btn" data-rel="sibling">＋ きょうだい</button>
-  </div></div>`;
+  </div>
+  <button class="btn" id="bothParentsBtn" style="width:100%;margin-top:9px;justify-content:center;padding:13px;">＋ 父母（両親）をまとめて登録</button>`;
+  if(state.order.length>=2)
+    html += `<button class="btn" id="connectBtn" style="width:100%;margin-top:9px;justify-content:center;padding:13px;border-style:dashed;">すでに登録した人とつなげる</button>`;
+  html += `</div>`;
 
   html += `<div class="danger-row">
     <button class="btn" id="editBtn">この人を編集</button>
@@ -929,6 +1042,8 @@ function openDetail(id){
   detailBody.querySelectorAll("[data-rel]").forEach(b=>{
     b.addEventListener("click",()=>{ closeOverlay(detailOverlay); openForm({relation:b.dataset.rel, targetId:id}); });
   });
+  $("#bothParentsBtn").addEventListener("click",()=>{ closeOverlay(detailOverlay); openParents(id); });
+  const cb=$("#connectBtn"); if(cb) cb.addEventListener("click",()=>{ closeOverlay(detailOverlay); openConnect(id); });
   $("#editBtn").addEventListener("click",()=>{ closeOverlay(detailOverlay); openForm({editId:id}); });
   $("#delBtn").addEventListener("click",()=>{
     if(confirm(`「${fullName(p)}」を削除します。よろしいですか？\n（つながりの線も外れます）`)){
@@ -957,18 +1072,19 @@ const REL_TEXT={
 function openForm(mode){
   formMode=mode||{};
   personForm.reset();
-  // default gender → other already checked via reset; ensure
-  personForm.gender.value="other";
+  const F=personForm.elements;
+  const setGender=g=>{ const r=personForm.querySelector('input[name=gender][value="'+(g||"other")+'"]'); if(r) r.checked=true; };
+  setGender("other");
   if(formMode.editId){
     const p=state.persons[formMode.editId];
     formTitle.textContent="この人を編集";
     formSubmit.textContent="保存する";
     relCtx.hidden=true;
-    personForm.last.value=p.last||""; personForm.first.value=p.first||"";
-    personForm.maiden.value=p.maiden||"";
-    personForm.yomi.value=p.yomi||""; personForm.gender.value=p.gender||"other";
-    personForm.birth.value=p.birth||""; personForm.death.value=p.death||"";
-    personForm.note.value=p.note||"";
+    F.last.value=p.last||""; F.first.value=p.first||"";
+    F.maiden.value=p.maiden||"";
+    F.yomi.value=p.yomi||""; setGender(p.gender);
+    F.birth.value=p.birth||""; F.death.value=p.death||"";
+    F.note.value=p.note||"";
   } else if(formMode.relation){
     const t=state.persons[formMode.targetId];
     formTitle.textContent="人を追加";
@@ -981,7 +1097,7 @@ function openForm(mode){
     relCtx.hidden=true;
   }
   openOverlay(formOverlay);
-  setTimeout(()=>personForm.first.focus(), 320);
+  setTimeout(()=>{ const fi=personForm.querySelector('input[name=first]'); if(fi) fi.focus(); }, 320);
 }
 
 personForm.addEventListener("submit",e=>{
@@ -1008,23 +1124,8 @@ personForm.addEventListener("submit",e=>{
 
   // create + wire relationship
   const newId = addPerson(data);
-  const rel=formMode.relation, tId=formMode.targetId;
-  if(rel && tId && state.persons[tId]){
-    const t=state.persons[tId];
-    if(rel==="spouse"){ setSpouses(newId,tId); }
-    else if(rel==="child"){
-      addParentLink(newId,tId);
-      const sps=t.spouses.filter(x=>state.persons[x]);
-      if(sps.length===1) addParentLink(newId,sps[0]);
-    }
-    else if(rel==="parent"){
-      addParentLink(tId,newId);
-      const existing=t.parents.filter(x=>state.persons[x] && x!==newId);
-      if(existing.length===1) setSpouses(newId, existing[0]); // co-parents become spouses
-    }
-    else if(rel==="sibling"){
-      for(const par of t.parents){ if(state.persons[par]) addParentLink(newId,par); }
-    }
+  if(formMode.relation && formMode.targetId && state.persons[formMode.targetId]){
+    wireRelation(formMode.relation, newId, formMode.targetId);
   }
   filterSurname=null;      // 追加した人が必ず見えるよう「全員」に戻す
   lastAddedId=newId;
@@ -1034,6 +1135,75 @@ personForm.addEventListener("submit",e=>{
   focusOnNode(newId, true);
   sparkleAt(newId);
   toast("追加しました ✦");
+});
+
+/* =========================================================
+   CONNECT existing people（あとから関係をつなぐ）
+   ========================================================= */
+let connectSelfId=null;
+const connectOverlay=$("#connectOverlay");
+function openConnect(selfId){
+  connectSelfId=selfId;
+  const self=state.persons[selfId]; if(!self) return;
+  $("#connectCtx").innerHTML=`<b>${esc(fullName(self))}</b> さんと、すでに登録されている人をつなげます。下で「関係」と「相手」を選んでください。`;
+  const sp=document.querySelector('input[name=crel][value=spouse]'); if(sp) sp.checked=true;
+  const sel=$("#connectTarget"); sel.innerHTML="";
+  for(const id of state.order){ if(id===selfId) continue; const p=state.persons[id];
+    const o=el("option"); o.value=id; o.textContent=fullName(p)+(p.birth?`（${p.birth.slice(0,4)}〜）`:""); sel.appendChild(o); }
+  updateConnectWho();
+  openOverlay(connectOverlay);
+}
+function updateConnectWho(){
+  const r=document.querySelector('input[name=crel]:checked'); if(!r) return;
+  const m={spouse:"配偶者にする人",child:"子どもにする人",parent:"親にする人",sibling:"きょうだいにする人"};
+  $("#connectWho").textContent=m[r.value];
+}
+document.querySelectorAll('input[name=crel]').forEach(r=>r.addEventListener("change",updateConnectWho));
+$("#connectDo").addEventListener("click",()=>{
+  const rel=document.querySelector('input[name=crel]:checked').value;
+  const other=$("#connectTarget").value;
+  if(!other||!state.persons[other]){ toast("相手を選んでください"); return; }
+  if(other===connectSelfId){ toast("同じ人は選べません"); return; }
+  if(rel==="child" && isAncestor(other,connectSelfId)){ toast("その関係はつなげられません（さかのぼってしまいます）"); return; }
+  if(rel==="parent" && isAncestor(connectSelfId,other)){ toast("その関係はつなげられません（さかのぼってしまいます）"); return; }
+  wireRelation(rel, other, connectSelfId);
+  filterSurname=null; lastAddedId=other;
+  save(); closeOverlay(connectOverlay); render(); focusOnNode(other,true); sparkleAt(other);
+  toast("つなげました ✦");
+});
+
+/* =========================================================
+   REGISTER BOTH PARENTS（父母同時登録）
+   ========================================================= */
+let parentsTargetId=null;
+const parentsOverlay=$("#parentsOverlay"), parentsForm=$("#parentsForm");
+function openParents(targetId){
+  parentsTargetId=targetId;
+  const t=state.persons[targetId]; if(!t) return;
+  $("#parentsCtx").innerHTML=`<b>${esc(fullName(t))}</b> さんの <b>父母（両親）</b>をまとめて登録します。わかる方だけでもかまいません。`;
+  parentsForm.reset();
+  openOverlay(parentsOverlay);
+  setTimeout(()=>{ const fi=parentsForm.querySelector('input[name=f_first]'); if(fi) fi.focus(); },320);
+}
+parentsForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  const fd=new FormData(parentsForm);
+  const mk=(pre,gender)=>{
+    const first=(fd.get(pre+"_first")||"").trim(), last=(fd.get(pre+"_last")||"").trim();
+    if(!first && !last) return null;
+    const death=fd.get(pre+"_death")||"";
+    return addPerson({last,first,maiden:(fd.get(pre+"_maiden")||"").trim(),gender,
+      birth:fd.get(pre+"_birth")||"",death,alive:!death});
+  };
+  const f=mk("f","male"), m=mk("m","female");
+  if(!f && !m){ toast("お名前を入力してください"); return; }
+  if(f && parentsTargetId) addParentLink(parentsTargetId,f);
+  if(m && parentsTargetId) addParentLink(parentsTargetId,m);
+  if(f && m) setSpouses(f,m);
+  filterSurname=null;
+  const focusId=f||m; lastAddedId=focusId;
+  save(); closeOverlay(parentsOverlay); render(); focusOnNode(focusId,true); sparkleAt(focusId);
+  toast(f&&m?"両親を登録しました ✦":"登録しました ✦");
 });
 
 /* =========================================================

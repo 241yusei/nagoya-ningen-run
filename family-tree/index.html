@@ -187,10 +187,6 @@ header.topbar{
 .chip.all.active{background:var(--accent);}
 @media(max-width:560px){#filterbar{max-width:calc(100% - 10px);}#filterbar .flabel{display:none;}}
 
-/* death-date toggle field */
-#deathWrap{display:none;}
-#deathWrap.show{display:block;}
-
 /* ---------- Modal / sheet ---------- */
 .overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
   backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
@@ -359,6 +355,10 @@ header.topbar{
           </div>
         </div>
         <div class="field">
+          <label>旧姓 <span class="hint">（任意）結婚などで姓が変わった方</span></label>
+          <input type="text" name="maiden" placeholder="例：佐藤" autocomplete="off">
+        </div>
+        <div class="field">
           <label>よみがな <span class="hint">（任意）</span></label>
           <input type="text" name="yomi" placeholder="例：やまだ たろう" autocomplete="off">
         </div>
@@ -370,16 +370,15 @@ header.topbar{
             <label><input type="radio" name="gender" value="other" checked><span>その他・不明</span></label>
           </div>
         </div>
-        <div class="field">
-          <label>生年月日 <span class="hint">（任意）</span></label>
-          <input type="date" name="birth" min="1850-01-01">
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" name="hasdeath" id="hasdeath"> 亡くなっています（没年月日を入力する）</label>
-        </div>
-        <div class="field" id="deathWrap">
-          <label>没年月日 <span class="hint">（わかる範囲で／不明なら空欄でも可）</span></label>
-          <input type="date" name="death" min="1850-01-01">
+        <div class="row2">
+          <div class="field">
+            <label>生年月日 <span class="hint">（任意）</span></label>
+            <input type="date" name="birth" min="1850-01-01">
+          </div>
+          <div class="field">
+            <label>没年月日 <span class="hint">（任意）</span></label>
+            <input type="date" name="death" min="1850-01-01">
+          </div>
         </div>
         <div class="field">
           <label>ひとことメモ <span class="hint">（任意）出身地・職業・旧姓など</span></label>
@@ -410,7 +409,7 @@ header.topbar{
       <p class="lead">むずかしい操作はありません。<b>名前を入れていくだけ</b>で、家系図ができあがります。スマホでも、パソコンでも使えます。</p>
       <div class="step"><div class="num serif">1</div><div><h3>最初のひとりを追加します</h3><p>「人を追加」ボタンを押して、ご本人やご先祖など、起点になる方の名前を入れます。生年月日などは、わかる範囲で大丈夫です。</p></div></div>
       <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。</p></div></div>
-      <div class="step"><div class="num serif">3</div><div><h3>亡くなった方の記録</h3><p>入力画面の「<b>亡くなっています（没年月日を入力する）</b>」にチェックを入れると、没年月日の入力欄があらわれます。わからない場合は空欄のままでもかまいません。名前にふれると、生年月日・没年月日・年齢・享年が表示されます。</p></div></div>
+      <div class="step"><div class="num serif">3</div><div><h3>旧姓・生年月日・没年月日（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年月日</b>・<b>没年月日</b>は、わかる範囲で入力してください（不明なら空欄のままでOK）。没年月日を入れた方は自動的に故人として扱われ、名前にふれると年齢・享年が表示されます。</p></div></div>
       <div class="step"><div class="num serif">4</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
       <div class="step"><div class="num serif">5</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
       <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。入力した内容は、この端末の中に自動で保存されます。</div>
@@ -473,7 +472,7 @@ function load(){
  person = { id, last, first, yomi, gender, birth, death, alive, note,
             parents:[id], spouses:[id] }   children are derived  */
 function newPerson(data){
-  return Object.assign({ id:uid(), last:"", first:"", yomi:"", gender:"other",
+  return Object.assign({ id:uid(), last:"", first:"", maiden:"", yomi:"", gender:"other",
     birth:"", death:"", alive:true, note:"", parents:[], spouses:[] }, data);
 }
 function addPerson(data){
@@ -848,8 +847,9 @@ function openDetail(id){
   html += `</div>`;
 
   html += `<div class="dl">`;
+  if(p.maiden) html += item("旧姓", p.maiden);
   if(p.birth) html += item("生年月日", fmtDate(p.birth));
-  if(!p.alive && p.death) html += item("没年月日", fmtDate(p.death));
+  if(p.death) html += item("没年月日", fmtDate(p.death));
   // relationships
   const sp = p.spouses.filter(x=>state.persons[x]).map(x=>fullName(state.persons[x]));
   const par = p.parents.filter(x=>state.persons[x]).map(x=>fullName(state.persons[x]));
@@ -906,19 +906,16 @@ function openForm(mode){
   personForm.reset();
   // default gender → other already checked via reset; ensure
   personForm.gender.value="other";
-  $("#deathWrap").classList.remove("show");   // 没年欄は既定で隠す
   if(formMode.editId){
     const p=state.persons[formMode.editId];
     formTitle.textContent="この人を編集";
     formSubmit.textContent="保存する";
     relCtx.hidden=true;
     personForm.last.value=p.last||""; personForm.first.value=p.first||"";
+    personForm.maiden.value=p.maiden||"";
     personForm.yomi.value=p.yomi||""; personForm.gender.value=p.gender||"other";
     personForm.birth.value=p.birth||""; personForm.death.value=p.death||"";
     personForm.note.value=p.note||"";
-    const deceased=!p.alive;
-    personForm.hasdeath.checked=deceased;
-    $("#deathWrap").classList.toggle("show", deceased);
   } else if(formMode.relation){
     const t=state.persons[formMode.targetId];
     formTitle.textContent="人を追加";
@@ -937,15 +934,16 @@ function openForm(mode){
 personForm.addEventListener("submit",e=>{
   e.preventDefault();
   const fd=new FormData(personForm);
-  const hasdeath = fd.get("hasdeath")==="on";
+  const death = fd.get("death")||"";
   const data={
     last:(fd.get("last")||"").trim(),
     first:(fd.get("first")||"").trim(),
+    maiden:(fd.get("maiden")||"").trim(),
     yomi:(fd.get("yomi")||"").trim(),
     gender:fd.get("gender")||"other",
     birth:fd.get("birth")||"",
-    death:hasdeath ? (fd.get("death")||"") : "",
-    alive:!hasdeath,
+    death:death,
+    alive:!death,                 // 没年月日が入っていれば故人とみなす
     note:(fd.get("note")||"").trim(),
   };
 
@@ -983,11 +981,6 @@ personForm.addEventListener("submit",e=>{
   focusOnNode(newId, true);
   sparkleAt(newId);
   toast("追加しました ✦");
-});
-
-// 「亡くなっています」をチェックすると没年月日の入力欄を表示
-$("#hasdeath").addEventListener("change",e=>{
-  $("#deathWrap").classList.toggle("show", e.target.checked);
 });
 
 /* =========================================================
@@ -1192,15 +1185,15 @@ function loadSample(){
   filterSurname=null;
   state={persons:{},order:[]};
   const A=addPerson({last:"山田",first:"一郎",yomi:"やまだ いちろう",gender:"male",birth:"1940-03-02",death:"2018-11-20",alive:false,note:"愛知県名古屋市出身。"});
-  const B=addPerson({last:"山田",first:"花子",yomi:"やまだ はなこ",gender:"female",birth:"1943-07-15",alive:true,note:"旧姓 佐藤。"});
+  const B=addPerson({last:"山田",first:"花子",maiden:"佐藤",yomi:"やまだ はなこ",gender:"female",birth:"1943-07-15",alive:true});
   setSpouses(A,B);
   // children of A&B
   const C=addPerson({last:"山田",first:"健太",yomi:"やまだ けんた",gender:"male",birth:"1968-05-10",alive:true});
-  const D=addPerson({last:"鈴木",first:"美咲",yomi:"すずき みさき",gender:"female",birth:"1971-09-22",alive:true,note:"結婚で鈴木姓に。血のつながりは山田家。"});
+  const D=addPerson({last:"鈴木",first:"美咲",maiden:"山田",yomi:"すずき みさき",gender:"female",birth:"1971-09-22",alive:true,note:"結婚で鈴木姓に。血のつながりは山田家。"});
   addParentLink(C,A); addParentLink(C,B);
   addParentLink(D,A); addParentLink(D,B);
   // C's spouse + kids
-  const E=addPerson({last:"山田",first:"由美",yomi:"やまだ ゆみ",gender:"female",birth:"1970-01-30",alive:true,note:"旧姓 田中。"});
+  const E=addPerson({last:"山田",first:"由美",maiden:"田中",yomi:"やまだ ゆみ",gender:"female",birth:"1970-01-30",alive:true});
   setSpouses(C,E);
   const G=addPerson({last:"山田",first:"翔",yomi:"やまだ しょう",gender:"male",birth:"1998-04-04",alive:true});
   const H=addPerson({last:"山田",first:"葵",yomi:"やまだ あおい",gender:"female",birth:"2001-12-12",alive:true});

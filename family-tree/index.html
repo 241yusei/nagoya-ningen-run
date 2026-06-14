@@ -229,15 +229,21 @@ header.topbar{
 .reveal{opacity:0;transform:translateY(28px);transition:opacity 1.05s var(--ease),transform 1.05s var(--ease);}
 .reveal.in{opacity:1;transform:none;}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
-/* 濃藍の段：雲と波を重ねる（文字は前面に） */
+/* 濃藍の段：雲と波＋文字を読みやすくする霞 */
 #empty .sea{position:relative;overflow:hidden;}
 #empty .sea > *{position:relative;z-index:1;}
-#empty .sea::before,#empty .sea::after{content:"";position:absolute;z-index:0;pointer-events:none;background-repeat:no-repeat;background-position:center;background-size:contain;opacity:.95;}
-#empty .sea::before{top:6%;left:-22px;width:clamp(180px,30vw,280px);height:150px;background-image:var(--cloud);}
-#empty .sea::after{bottom:5%;right:-12px;width:clamp(130px,22vw,200px);height:135px;background-image:var(--wave);}
-/* 濃藍の段（青海波）の上は白系の文字に */
+/* 中央を少し沈める霞（白文字の可読性確保） */
+#empty .sea::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(130% 88% at 50% 44%, rgba(9,26,55,.66) 0%, rgba(9,26,55,.40) 44%, rgba(9,26,55,0) 74%);}
+/* 雲（左上）と波（右下） */
+#empty .sea::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:var(--cloud),var(--wave);background-repeat:no-repeat,no-repeat;
+  background-position:-10px 7%, calc(100% + 12px) 93%;
+  background-size:clamp(180px,28vw,280px) auto, clamp(130px,22vw,200px) auto;}
+/* 濃藍の段の上は白系の文字＋強めの影で可読性を確保 */
 #empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p{color:#fdfbf4;}
-#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p,#empty .sea .eyebrow,#empty .sea .hanko{text-shadow:0 1px 14px rgba(8,22,46,.5);}
+#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p,#empty .sea .eyebrow,#empty .sea .hanko,#empty .sea .btn.link{
+  text-shadow:0 2px 3px rgba(6,18,40,.6), 0 0 22px rgba(6,18,40,.9), 0 0 48px rgba(6,18,40,.65);}
 #empty .sea .eyebrow{color:#ecd08a;}
 #empty .sea .rule{background:#ecd08a;opacity:.95;}
 #empty .sea .hanko{color:#fdfbf4;border-color:#fdfbf4;background:rgba(255,255,255,.1);box-shadow:0 2px 0 rgba(0,0,0,.18);}

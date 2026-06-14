@@ -187,6 +187,18 @@ header.topbar{
 .chip.all.active{background:var(--accent);}
 @media(max-width:560px){#filterbar{max-width:calc(100% - 10px);}#filterbar .flabel{display:none;}}
 
+/* share + export */
+.linkbox{display:flex;gap:8px;margin:14px 0;}
+.linkbox input{flex:1;min-width:0;font-family:inherit;font-size:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--sub);}
+.share-note{font-size:12.5px;color:var(--sub);background:var(--accent-soft);border-radius:11px;padding:12px 14px;margin-top:14px;}
+.share-lead{font-size:14.5px;color:var(--ink);margin:0 0 4px;line-height:1.7;}
+.export-hint{font-size:13.5px;color:var(--sub);margin:0 0 14px;}
+.export-preview{width:100%;border-radius:12px;border:1px solid var(--hair);margin-bottom:18px;display:block;background:#EFEBE2;}
+.export-grid{display:flex;flex-direction:column;gap:10px;}
+.export-grid .btn{justify-content:flex-start;padding:14px;font-size:15px;}
+.export-grid .btn .em{font-weight:700;}
+.export-grid .btn small{color:var(--faint);font-weight:400;margin-left:auto;font-size:12px;}
+
 /* ---------- Modal / sheet ---------- */
 .overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
   backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
@@ -285,6 +297,10 @@ header.topbar{
   <button class="btn" id="btnAdd">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     <span class="lbl-sm">人を追加</span>
+  </button>
+  <button class="btn" id="btnShare" title="共有">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+    <span class="lbl-sm">共有</span>
   </button>
   <button class="btn icon" id="btnMenu" title="メニュー">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
@@ -412,6 +428,8 @@ header.topbar{
       <div class="step"><div class="num serif">3</div><div><h3>旧姓・生年月日・没年月日（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年月日</b>・<b>没年月日</b>は、わかる範囲で入力してください（不明なら空欄のままでOK）。没年月日を入れた方は自動的に故人として扱われ、名前にふれると年齢・享年が表示されます。</p></div></div>
       <div class="step"><div class="num serif">4</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
       <div class="step"><div class="num serif">5</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
+      <div class="step"><div class="num serif">6</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
+      <div class="step"><div class="num serif">7</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
       <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。入力した内容は、この端末の中に自動で保存されます。</div>
     </div>
   </div>
@@ -423,12 +441,47 @@ header.topbar{
     <div class="hd"><h2>メニュー</h2><button class="x" data-close>×</button></div>
     <div class="bd">
       <div class="acts" style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn" id="menuShare" style="justify-content:flex-start;padding:14px;">家系図を共有する</button>
+        <button class="btn" id="menuPoster" style="justify-content:flex-start;padding:14px;">画像・PDFにする（雑誌風）</button>
         <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
         <button class="btn" id="menuExport" style="justify-content:flex-start;padding:14px;">データを書き出す（バックアップ）</button>
         <button class="btn" id="menuImport" style="justify-content:flex-start;padding:14px;">データを読み込む</button>
         <button class="btn danger" id="menuClear" style="justify-content:flex-start;padding:14px;">すべて消去してまっさらにする</button>
       </div>
       <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Share modal ========== -->
+<div class="overlay" id="shareOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>家系図を共有</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <p class="share-lead">このリンクを送ると、相手も同じ家系図を見られます。<b>相手の画面で人を追加・編集</b>することもできます。</p>
+      <p class="share-lead" style="color:var(--sub);font-size:13.5px;">追加してもらったら、相手に「共有」から新しいリンクを作ってもらい、それを開けば最新の内容を取り込めます。</p>
+      <div class="linkbox">
+        <input id="shareLink" readonly value="">
+        <button class="btn accent" id="copyLink">コピー</button>
+      </div>
+      <button class="btn" id="nativeShare" style="width:100%;justify-content:center;padding:13px;">送る（LINE・メールなど）</button>
+      <div class="share-note">※ 家系図のデータはリンクの中に含めて共有します（サーバーには保存・公開されません）。人数が多いとリンクが長くなることがあります。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Export (magazine) modal ========== -->
+<div class="overlay" id="exportOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>画像・PDFにする</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <p class="export-hint">海外の雑誌のような、洗練されたレイアウトで書き出します。下のプレビューで仕上がりを確認できます。</p>
+      <canvas class="export-preview" id="exportPreview" width="540" height="960"></canvas>
+      <div class="export-grid">
+        <button class="btn accent" id="expStory"><span class="em">ストーリーズ用の画像</span><small>縦長 1080×1920</small></button>
+        <button class="btn" id="expSquare"><span class="em">投稿用の画像</span><small>正方形 1080×1080</small></button>
+        <button class="btn" id="expPdf"><span class="em">PDFにして保存</span><small>A4 たて</small></button>
+      </div>
     </div>
   </div>
 </div>
@@ -1178,6 +1231,279 @@ $("#importFile").addEventListener("change",e=>{
 });
 
 /* =========================================================
+   SHARE  (家系図をリンクに埋め込んで共有。共有相手も追加できる)
+   ========================================================= */
+function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64decode(b64){ return decodeURIComponent(escape(atob(b64))); }
+function shareURL(){
+  const payload=b64encode(JSON.stringify(state));
+  return location.origin + location.pathname + "#t=" + payload;
+}
+function openShare(){
+  if(!state.order.length){ toast("先に家系図をつくってください"); return; }
+  const url=shareURL();
+  $("#shareLink").value=url;
+  openOverlay($("#shareOverlay"));
+}
+$("#btnShare").addEventListener("click",openShare);
+$("#menuShare").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openShare(); });
+$("#copyLink").addEventListener("click",async ()=>{
+  const url=$("#shareLink").value;
+  try{ await navigator.clipboard.writeText(url); toast("リンクをコピーしました"); }
+  catch(e){ const i=$("#shareLink"); i.focus(); i.select(); try{document.execCommand("copy");toast("リンクをコピーしました");}catch(_){toast("コピーできませんでした");} }
+});
+$("#nativeShare").addEventListener("click",async ()=>{
+  const url=$("#shareLink").value;
+  if(navigator.share){ try{ await navigator.share({title:"家系図", text:"家系図を共有します。あなたも追加・編集できます。", url}); }catch(e){} }
+  else { $("#copyLink").click(); toast("リンクをコピーしました。貼り付けて送ってください"); }
+});
+/* load a tree from the URL hash (#t=...) when arriving via a shared link */
+function loadFromHash(){
+  const h=location.hash||"";
+  if(!h.startsWith("#t=")) return false;
+  try{
+    const d=JSON.parse(b64decode(h.slice(3)));
+    if(d && d.persons){
+      snapshot();                  // 今のデータを退避（戻れるように）
+      state=d; if(!state.order) state.order=Object.keys(d.persons);
+      filterSurname=null; save();
+      history.replaceState(null,"",location.pathname);  // URLをきれいに
+      render(); fitToScreen();
+      showBanner("共有された家系図を表示中です。あなたも追加・編集できます。");
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+/* =========================================================
+   EXPORT — magazine-style poster (Canvas) → PNG / PDF
+   ========================================================= */
+const POSTER_BG="#F3EFE6", POSTER_INK="#1A1916", POSTER_SUB="#6E685C",
+      POSTER_LINE="#1A1916", POSTER_HAIR="#C8C0AF", POSTER_ACCENT="#9A4A2B",
+      POSTER_CARD="#FBFAF6";
+
+function dominantSurname(){
+  const c={}; for(const id of state.order){ const s=state.persons[id].last; if(s) c[s]=(c[s]||0)+1; }
+  let best=null,bn=0; for(const k in c){ if(c[k]>bn){bn=c[k];best=k;} }
+  return best;
+}
+function genCount(){ const g=computeGenerations(); let m=0; for(const id of state.order) m=Math.max(m,g[id]||0); return m+1; }
+
+function spaced(ctx,text,x,y,sp,align){
+  // letter-spaced text (align: 'left'|'center'|'right')
+  const chars=[...text];
+  let total=0; for(const ch of chars) total+=ctx.measureText(ch).width+sp; total-=sp;
+  let sx = align==='center'? x-total/2 : align==='right'? x-total : x;
+  const prev=ctx.textAlign; ctx.textAlign='left';
+  for(const ch of chars){ ctx.fillText(ch,sx,y); sx+=ctx.measureText(ch).width+sp; }
+  ctx.textAlign=prev;
+}
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function fitText(ctx,text,maxw){
+  if(ctx.measureText(text).width<=maxw) return text;
+  let t=text;
+  while(t.length>1 && ctx.measureText(t+"…").width>maxw) t=t.slice(0,-1);
+  return t+"…";
+}
+
+function drawTreeInto(ctx, area){
+  const L=buildLayout(null);
+  if(!L.width){ return; }
+  const s=Math.min(area.w/L.width, area.h/L.height);
+  const ox=area.x+(area.w-L.width*s)/2;
+  const oy=area.y+(area.h-L.height*s)/2;
+  ctx.save(); ctx.translate(ox,oy); ctx.scale(s,s);
+
+  // connectors
+  ctx.strokeStyle=POSTER_INK; ctx.lineWidth=1.5; ctx.lineCap="round"; ctx.lineJoin="round";
+  for(const u of L.units){
+    if(u.members.length===2){
+      const a=L.rects[u.members[0]], b=L.rects[u.members[1]], y=a.cy;
+      ctx.beginPath(); ctx.moveTo(a.x+CARD_W,y); ctx.lineTo(b.x,y); ctx.stroke();
+      ctx.beginPath(); ctx.arc((a.x+CARD_W+b.x)/2,y,4.5,0,Math.PI*2);
+      ctx.fillStyle=POSTER_BG; ctx.fill(); ctx.stroke();
+    }
+    if(u.children.length){
+      const startX = u.members.length===2 ? u._coupleCx : u._anchorCx;
+      const parentBottom=u._y+CARD_H, busY=parentBottom+V_GAP*0.45;
+      const cxs=u.children.map(c=>c._anchorCx);
+      const minCx=Math.min(...cxs), maxCx=Math.max(...cxs);
+      ctx.beginPath();
+      ctx.moveTo(startX,parentBottom); ctx.lineTo(startX,busY);
+      ctx.moveTo(minCx,busY); ctx.lineTo(maxCx,busY);
+      for(const c of u.children){ ctx.moveTo(c._anchorCx,busY); ctx.lineTo(c._anchorCx,c._y); }
+      ctx.stroke();
+    }
+  }
+  // cards
+  for(const id of state.order){
+    const p=state.persons[id], r=L.rects[id]; if(!r) continue;
+    rr(ctx,r.x,r.y,CARD_W,CARD_H,11);
+    ctx.fillStyle=POSTER_CARD; ctx.fill();
+    ctx.lineWidth=1.2; ctx.strokeStyle=POSTER_HAIR; ctx.stroke();
+    // gender accent bar
+    ctx.fillStyle = p.gender==="male"?"#5B7B9A":p.gender==="female"?"#B07089":"#9A4A2B";
+    rr(ctx,r.x,r.y,4,CARD_H,2); ctx.save(); ctx.clip();
+    ctx.fillRect(r.x,r.y,4,CARD_H); ctx.restore();
+    // name
+    ctx.fillStyle=POSTER_INK; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
+    ctx.font="600 19px 'Shippori Mincho', serif";
+    const hasYears = (p.birth||p.death);
+    ctx.fillText(fitText(ctx,fullName(p),CARD_W-26), r.x+14, r.y+(hasYears?30:40));
+    // years
+    if(hasYears){
+      ctx.fillStyle=POSTER_SUB; ctx.font="400 12px 'Noto Sans JP', sans-serif";
+      const by=p.birth?p.birth.slice(0,4):"", dy=p.death?p.death.slice(0,4):"";
+      const yr = p.death? `${by||"?"} – ${dy||"?"}` : (by? `b. ${by}`:"");
+      ctx.fillText(yr, r.x+14, r.y+50);
+    }
+  }
+  ctx.restore();
+}
+
+function drawPoster(ctx,W,H){
+  const m=Math.round(W*0.075);
+  // background
+  ctx.fillStyle=POSTER_BG; ctx.fillRect(0,0,W,H);
+  // thin outer frame
+  ctx.strokeStyle=POSTER_HAIR; ctx.lineWidth=1.5;
+  ctx.strokeRect(Math.round(m*0.5)+0.5, Math.round(m*0.5)+0.5, W-m, H-m);
+
+  const cx=W/2, left=m, right=W-m, cw=right-left;
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月`;
+  const dateEn=now.toLocaleDateString("en-US",{month:"long",year:"numeric"}).toUpperCase();
+
+  // ---- header (editorial) ----
+  let y=m*1.35;
+  // kicker rule + small caps
+  ctx.fillStyle=POSTER_SUB;
+  ctx.font=`500 ${Math.round(W*0.0145)}px Georgia, 'Times New Roman', serif`;
+  ctx.textBaseline="alphabetic";
+  spaced(ctx,"FAMILY ARCHIVE", left, y, W*0.006, "left");
+  spaced(ctx,"VOL. I", right, y, W*0.006, "right");
+  y+=Math.round(W*0.018);
+  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+
+  // masthead title
+  const sur=dominantSurname();
+  const title = sur? sur+"家" : "わたしの家系図";
+  y += Math.round(H*0.085);
+  let ts=Math.round(W*0.135);
+  ctx.fillStyle=POSTER_INK;
+  do{ ctx.font=`700 ${ts}px 'Shippori Mincho', serif`; ts-=2; }
+  while(ctx.measureText(title).width>cw && ts>20);
+  ctx.textAlign="center"; ctx.fillText(title, cx, y);
+  ctx.textAlign="left";
+
+  // subtitle (italic serif, English)
+  y += Math.round(W*0.05);
+  ctx.fillStyle=POSTER_SUB;
+  ctx.font=`italic 400 ${Math.round(W*0.026)}px Georgia, 'Times New Roman', serif`;
+  ctx.textAlign="center";
+  ctx.fillText("The Family Lineage", cx, y);
+  ctx.textAlign="left";
+
+  // date + small caps line
+  y += Math.round(W*0.045);
+  ctx.fillStyle=POSTER_SUB; ctx.font=`500 ${Math.round(W*0.0135)}px Georgia, serif`;
+  ctx.textAlign="center"; spaced(ctx,dateEn,cx,y,W*0.005,"center"); ctx.textAlign="left";
+  y += Math.round(W*0.025);
+  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=2.2;
+  ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+  ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(left,y+4); ctx.lineTo(right,y+4); ctx.stroke();
+
+  // ---- footer ----
+  let fy=H-m*1.15;
+  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(left,fy); ctx.lineTo(right,fy); ctx.stroke();
+  fy+=Math.round(W*0.032);
+  ctx.fillStyle=POSTER_SUB; ctx.font=`500 ${Math.round(W*0.0135)}px Georgia, serif`;
+  spaced(ctx,"KINSHIP — FAMILY TREE", left, fy, W*0.004, "left");
+  spaced(ctx,`${state.order.length} MEMBERS · ${genCount()} GENERATIONS`, right, fy, W*0.004, "right");
+
+  // ---- tree area ----
+  const areaTop=y+Math.round(H*0.03);
+  const areaBottom=(H-m*1.15)-Math.round(H*0.03);
+  drawTreeInto(ctx, {x:left, y:areaTop, w:cw, h:areaBottom-areaTop});
+}
+
+async function makePoster(W,H){
+  try{ if(document.fonts){ await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load("700 80px 'Shippori Mincho'"),
+      document.fonts.load("600 20px 'Shippori Mincho'"),
+      document.fonts.load("400 14px 'Noto Sans JP'"),
+    ]); } }catch(e){}
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  drawPoster(cv.getContext("2d"),W,H);
+  return cv;
+}
+
+/* minimal single-image PDF (embeds a JPEG, DCTDecode) */
+function buildPdf(jpegDataUrl,w,h){
+  const bin=atob(jpegDataUrl.split(",")[1]);
+  const jpeg=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) jpeg[i]=bin.charCodeAt(i);
+  const parts=[]; let len=0; const off=[];
+  const put=str=>{ const u=new Uint8Array(str.length); for(let i=0;i<str.length;i++)u[i]=str.charCodeAt(i)&0xff; parts.push(u); len+=u.length; };
+  const putB=u=>{ parts.push(u); len+=u.length; };
+  put("%PDF-1.4\n");
+  off[1]=len; put("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  off[2]=len; put("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+  off[3]=len; put(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+  off[4]=len; put(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);
+  putB(jpeg); put("\nendstream\nendobj\n");
+  const content=`q\n${w} 0 0 ${h} 0 0 cm\n/Im0 Do\nQ\n`;
+  off[5]=len; put(`5 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
+  const xrefAt=len;
+  let xref="xref\n0 6\n0000000000 65535 f \n";
+  for(let i=1;i<=5;i++) xref+=String(off[i]).padStart(10,"0")+" 00000 n \n";
+  put(xref);
+  put(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`);
+  const out=new Uint8Array(len); let o=0; for(const p of parts){ out.set(p,o); o+=p.length; }
+  return new Blob([out],{type:"application/pdf"});
+}
+
+function downloadBlob(blob,name){
+  const a=el("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function openExport(){
+  if(!state.order.length){ toast("先に家系図をつくってください"); return; }
+  openOverlay($("#exportOverlay"));
+  setTimeout(refreshPreview,80);
+}
+async function refreshPreview(){
+  const pv=$("#exportPreview");
+  const poster=await makePoster(1080,1920);
+  const w=Math.max(240, pv.clientWidth||320), h=Math.round(w*1920/1080);
+  pv.width=Math.round(w*2); pv.height=Math.round(h*2); pv.style.height=h+"px";
+  const c=pv.getContext("2d"); c.drawImage(poster,0,0,pv.width,pv.height);
+}
+$("#menuPoster").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openExport(); });
+$("#expStory").addEventListener("click",async ()=>{
+  const cv=await makePoster(1080,1920);
+  cv.toBlob(b=>{ downloadBlob(b,"family-tree-story.png"); toast("ストーリーズ用の画像を保存しました"); },"image/png");
+});
+$("#expSquare").addEventListener("click",async ()=>{
+  const cv=await makePoster(1080,1080);
+  cv.toBlob(b=>{ downloadBlob(b,"family-tree-square.png"); toast("投稿用の画像を保存しました"); },"image/png");
+});
+$("#expPdf").addEventListener("click",async ()=>{
+  const cv=await makePoster(1240,1754);     // A4 portrait @ ~150dpi
+  const url=cv.toDataURL("image/jpeg",0.92);
+  downloadBlob(buildPdf(url,1240,1754),"family-tree.pdf");
+  toast("PDFを保存しました");
+});
+
+/* =========================================================
    SAMPLE family (姓が違っても血のつながりを表現)
    ========================================================= */
 function loadSample(){
@@ -1213,10 +1539,13 @@ function loadSample(){
    ========================================================= */
 load();
 applyView();
-render();
-if(state.order.length){ fitToScreen(); }
-// 直前にサンプル／消去をしていたら、戻せるバナーを再表示
-try{ const b=localStorage.getItem("kinship.backup"); if(b!=null){ backupJSON=b; showBanner("以前のデータに戻せます。"); } }catch(e){}
+const fromShare = loadFromHash();   // 共有リンクで来た場合はそれを読み込む
+if(!fromShare){
+  render();
+  if(state.order.length){ fitToScreen(); }
+  // 直前にサンプル／消去をしていたら、戻せるバナーを再表示
+  try{ const b=localStorage.getItem("kinship.backup"); if(b!=null){ backupJSON=b; showBanner("以前のデータに戻せます。"); } }catch(e){}
+}
 // expose for debugging
 window.__ft={state, render, loadSample};
 })();

@@ -1236,15 +1236,7 @@ function drawBldg(c,x,by,w,h,base,hazeCol,hazeT,opts){
       c.fillStyle=on?lit:dim;
       c.fillRect(x+mx+cx*(gw+mx), top+PIXEL*3+ry*(gh+my), gw, gh);
     }
-    // ガラスの斜め反射（淡い帯）
-    if(cf>0.5){
-      c.save();c.globalAlpha=0.07*cf;c.fillStyle='#ffffff';
-      c.beginPath();c.moveTo(x+w*0.1,top);c.lineTo(x+w*0.32,top);c.lineTo(x+w*0.12,by);c.lineTo(x,by);c.closePath();c.fill();
-      c.restore();
-    }
   }
-  // 足元の接地アンビエントオクルージョン
-  if(cf>0.3){ c.fillStyle='rgba(10,14,26,'+(0.12*cf)+')'; c.fillRect(x,by-4,w,6); }
 }
 // パララックス・スカイライン（空気遠近）。cfg:{par,by,base,haze,hazeT,wmin,wmax,hmin,hmax,step,seed}
 function skyline(c,cam,cfg){
@@ -1256,13 +1248,6 @@ function skyline(c,cam,cfg){
     const sx=qpx(idx*step - sc + (rnd1(idx,cfg.seed,3)-0.5)*step*0.3);
     const roof=Math.floor(rnd1(idx,cfg.seed,4)*5);
     drawBldg(c,sx,cfg.by,w,h,cfg.base,cfg.haze,cfg.hazeT,{roof,id:idx*7+cfg.seed,win:cfg.win});
-  }
-  // 空気遠近：足元をレイヤーの霞色で沈める（奥行き）
-  if(cfg.hazeT>0.25){
-    const hz=c.createLinearGradient(0,cfg.by-66,0,cfg.by+6);
-    hz.addColorStop(0,hexA(cfg.haze,0));
-    hz.addColorStop(1,hexA(cfg.haze,Math.min(0.55,cfg.hazeT*0.7)));
-    c.fillStyle=hz; c.fillRect(0,cfg.by-66,W,72);
   }
 }
 const BGS={

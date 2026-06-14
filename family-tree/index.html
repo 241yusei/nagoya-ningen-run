@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="theme-color" content="#F4F2ED" />
+<title>家系図 — Kinship</title>
+<meta name="description" content="入力した情報から、バランスのよい家系図を自動でつくるサイト。姓が違っても血のつながりを記録できます。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#F4F2ED;
+  --paper:#FBFAF7;
+  --surface:#FFFFFF;
+  --ink:#1C1B19;
+  --sub:#6E6A62;
+  --faint:#9A958B;
+  --hair:#E5E1D7;
+  --line:#C7C1B4;
+  --accent:#A6552F;        /* terracotta */
+  --accent-soft:#F0E2D8;
+  --gold:#C9A24B;
+  --male:#5B7B9A;
+  --female:#B07089;
+  --neutral:#8A8678;
+  --shadow:0 1px 2px rgba(28,27,25,.04), 0 8px 24px rgba(28,27,25,.06);
+  --shadow-lg:0 8px 40px rgba(28,27,25,.16);
+  --radius:14px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;}
+body{
+  font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 70% -10%, #FAF7F1 0%, rgba(250,247,241,0) 60%),
+    var(--bg);
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+.serif{font-family:"Shippori Mincho",serif;}
+
+/* ---------- Top bar ---------- */
+header.topbar{
+  position:fixed;top:0;left:0;right:0;height:60px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(244,242,237,.82);
+  backdrop-filter:saturate(140%) blur(14px);
+  -webkit-backdrop-filter:saturate(140%) blur(14px);
+  border-bottom:1px solid var(--hair);
+}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
+.brand .mark{font-family:"Shippori Mincho",serif;font-weight:700;font-size:22px;letter-spacing:.06em;}
+.brand .sub{font-size:11px;letter-spacing:.32em;color:var(--faint);text-transform:uppercase;}
+.spacer{flex:1;}
+.btn{
+  font-family:inherit;font-size:14px;font-weight:500;color:var(--ink);
+  border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:9px 16px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;line-height:1;
+  transition:transform .15s var(--ease), box-shadow .2s var(--ease), background .2s;
+  white-space:nowrap;
+}
+.btn:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.ghost{background:transparent;border-color:transparent;}
+.btn.icon{padding:9px;width:40px;height:40px;justify-content:center;}
+.btn svg{width:18px;height:18px;display:block;}
+.btn .lbl-sm{display:inline;}
+@media(max-width:680px){
+  .brand .sub{display:none;}
+  .btn .lbl-sm{display:none;}
+  .btn{padding:9px 12px;}
+}
+
+/* ---------- Stage / canvas ---------- */
+#stage{
+  position:fixed;inset:60px 0 0 0;overflow:hidden;cursor:grab;touch-action:none;
+  background-image:
+    radial-gradient(var(--hair) .8px, transparent .8px);
+  background-size:26px 26px;
+  background-position:center;
+}
+#stage.grabbing{cursor:grabbing;}
+#canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;}
+#links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+#nodes{position:absolute;left:0;top:0;}
+
+/* connector animation */
+.link-path{fill:none;stroke:var(--line);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.link-path.marriage{stroke:var(--accent);stroke-width:2;opacity:.7;}
+.link-ring{fill:var(--paper);stroke:var(--accent);stroke-width:1.6;}
+.link-path.enter{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .7s .05s var(--ease) forwards;}
+@keyframes draw{to{stroke-dashoffset:0;}}
+
+/* ---------- Person card ---------- */
+.card{
+  position:absolute;background:var(--surface);border:1px solid var(--hair);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:10px 12px;cursor:pointer;overflow:hidden;
+  transition:transform .18s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--line);}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--neutral);}
+.card.male::before{background:var(--male);}
+.card.female::before{background:var(--female);}
+.card.deceased{background:linear-gradient(0deg,#FBFAF7,#fff);}
+.card .nm{font-family:"Shippori Mincho",serif;font-weight:600;font-size:16px;line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .yomi{font-size:10.5px;color:var(--faint);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .meta{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .rel{position:absolute;top:7px;right:9px;font-size:9.5px;color:var(--faint);letter-spacing:.04em;}
+.card .dec-mark{position:absolute;top:7px;right:9px;font-size:10px;color:var(--faint);}
+/* the quick add buttons on hover */
+.card .quick{position:absolute;inset:auto 0 0 0;display:flex;gap:2px;justify-content:center;
+  background:linear-gradient(0deg,rgba(255,255,255,.96),rgba(255,255,255,0));
+  padding:6px 4px 5px;opacity:0;transform:translateY(6px);transition:.2s var(--ease);pointer-events:none;}
+.card:hover .quick,.card.touch-show .quick{opacity:1;transform:translateY(0);pointer-events:auto;}
+.card .quick button{font-family:inherit;border:none;background:var(--accent-soft);color:var(--accent);
+  font-size:10px;font-weight:700;border-radius:999px;padding:4px 8px;cursor:pointer;line-height:1;}
+.card .quick button:hover{background:var(--accent);color:#fff;}
+
+/* entrance animation for newly added */
+.card.enter{animation:cardIn .6s var(--ease) both;}
+@keyframes cardIn{
+  0%{opacity:0;transform:translateY(10px) scale(.82);}
+  60%{opacity:1;}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.card.enter::after{content:"";position:absolute;inset:-3px;border-radius:18px;
+  box-shadow:0 0 0 0 rgba(201,162,75,.55);animation:halo 1.1s .15s var(--ease) forwards;pointer-events:none;}
+@keyframes halo{0%{box-shadow:0 0 0 0 rgba(201,162,75,.6);}100%{box-shadow:0 0 0 22px rgba(201,162,75,0);}}
+
+/* sparkle burst */
+.spark{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);
+  pointer-events:none;z-index:30;opacity:0;}
+.spark.go{animation:spark .85s var(--ease) forwards;}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2);}}
+
+/* ---------- Empty state ---------- */
+#empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;}
+#empty .box{max-width:440px;text-align:center;background:var(--paper);border:1px solid var(--hair);
+  border-radius:22px;padding:40px 34px;box-shadow:var(--shadow);}
+#empty h1{font-family:"Shippori Mincho",serif;font-size:30px;font-weight:700;margin:6px 0 2px;letter-spacing:.04em;}
+#empty .en{font-size:11px;letter-spacing:.36em;color:var(--faint);text-transform:uppercase;}
+#empty p{color:var(--sub);font-size:15px;margin:14px 0 24px;}
+#empty .acts{display:flex;flex-direction:column;gap:10px;}
+#empty .btn{justify-content:center;font-size:16px;padding:14px;}
+
+/* ---------- Zoom controls ---------- */
+.zoomctl{position:fixed;right:16px;bottom:18px;z-index:35;display:flex;flex-direction:column;gap:8px;}
+.zoomctl .btn{width:44px;height:44px;justify-content:center;padding:0;font-size:20px;background:var(--surface);}
+.legend{position:fixed;left:16px;bottom:18px;z-index:35;background:rgba(251,250,247,.9);
+  backdrop-filter:blur(8px);border:1px solid var(--hair);border-radius:12px;padding:10px 13px;
+  font-size:11.5px;color:var(--sub);display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);}
+.legend .dot{display:inline-flex;align-items:center;gap:5px;}
+.legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block;}
+@media(max-width:560px){.legend{display:none;}}
+
+/* ---------- Modal / sheet ---------- */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
+  backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
+  opacity:0;pointer-events:none;transition:opacity .25s var(--ease);}
+.overlay.open{opacity:1;pointer-events:auto;}
+.sheet{background:var(--paper);border-radius:20px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;
+  max-height:calc(100dvh - 32px);overflow:auto;transform:translateY(14px) scale(.98);
+  transition:transform .3s var(--ease);}
+.overlay.open .sheet{transform:none;}
+.sheet .hd{position:sticky;top:0;background:var(--paper);padding:20px 24px 12px;border-bottom:1px solid var(--hair);
+  display:flex;align-items:center;justify-content:space-between;z-index:1;}
+.sheet .hd h2{font-family:"Shippori Mincho",serif;font-size:20px;font-weight:600;margin:0;letter-spacing:.03em;}
+.sheet .bd{padding:20px 24px 26px;}
+.x{border:none;background:var(--surface);border:1px solid var(--hair);width:36px;height:36px;border-radius:50%;
+  cursor:pointer;font-size:18px;color:var(--sub);line-height:1;}
+.x:hover{background:#fff;color:var(--ink);}
+
+/* form */
+.field{margin-bottom:16px;}
+.field > label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.field .hint{font-size:12px;color:var(--faint);font-weight:400;margin-left:6px;}
+.field input[type=text],.field input[type=date],.field textarea,.field select{
+  width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:11px;padding:12px 13px;outline:none;
+  transition:border-color .15s,box-shadow .15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.field textarea{resize:vertical;min-height:64px;line-height:1.6;}
+.row2{display:flex;gap:12px;}
+.row2 > *{flex:1;}
+.seg{display:flex;gap:8px;}
+.seg label{flex:1;}
+.seg input{position:absolute;opacity:0;pointer-events:none;}
+.seg span{display:block;text-align:center;font-size:14px;padding:11px 6px;border:1px solid var(--line);
+  border-radius:11px;cursor:pointer;background:var(--surface);transition:.15s;}
+.seg input:checked + span{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;}
+.check{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--sub);cursor:pointer;user-select:none;}
+.check input{width:20px;height:20px;accent-color:var(--accent);}
+.form-actions{display:flex;gap:10px;margin-top:22px;}
+.form-actions .btn{flex:1;justify-content:center;font-size:16px;padding:14px;}
+.relctx{font-size:13px;color:var(--sub);background:var(--accent-soft);border-radius:11px;padding:11px 14px;margin-bottom:18px;}
+.relctx b{color:var(--accent);}
+
+/* detail */
+.detail-name{font-family:"Shippori Mincho",serif;font-size:30px;font-weight:700;letter-spacing:.03em;line-height:1.2;}
+.detail-yomi{font-size:13px;color:var(--faint);letter-spacing:.08em;margin-top:2px;}
+.detail-badges{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px;}
+.badge{font-size:12px;padding:5px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--hair);color:var(--sub);}
+.badge.g-male{color:var(--male);border-color:#d6e0ea;background:#f4f8fc;}
+.badge.g-female{color:var(--female);border-color:#ecd8e0;background:#fcf4f8;}
+.dl{margin:18px 0 0;border-top:1px solid var(--hair);}
+.dl .item{display:flex;padding:13px 0;border-bottom:1px solid var(--hair);gap:14px;}
+.dl .k{width:96px;flex:none;font-size:13px;color:var(--faint);font-weight:700;}
+.dl .v{font-size:16px;color:var(--ink);}
+.dl .v.note{white-space:pre-wrap;color:var(--sub);font-size:15px;}
+.rel-actions{margin-top:22px;}
+.rel-actions .ttl{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.rel-grid .btn{justify-content:flex-start;padding:13px 14px;font-size:15px;}
+.danger-row{display:flex;gap:10px;margin-top:20px;}
+.danger-row .btn{flex:1;justify-content:center;}
+.btn.danger{color:#A33;border-color:#e9c9c9;background:#fdf6f6;}
+.btn.danger:hover{background:#fbeaea;}
+
+/* guide */
+.guide .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--hair);}
+.guide .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-family:"Shippori Mincho",serif;}
+.guide .step h3{margin:0 0 3px;font-size:16px;}
+.guide .step p{margin:0;font-size:14px;color:var(--sub);}
+.guide .lead{font-size:15px;color:var(--sub);margin:0 0 14px;}
+.guide .tip{margin-top:18px;background:var(--accent-soft);border-radius:12px;padding:14px 16px;font-size:14px;color:#7a4226;}
+.guide .tip b{color:var(--accent);}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);z-index:60;
+  background:var(--ink);color:#fff;font-size:14px;padding:12px 20px;border-radius:999px;
+  box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.3s var(--ease);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* first-run hint */
+.kbd{font-size:12px;color:var(--faint);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark serif">家系図</span>
+    <span class="sub">Kinship</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn" id="btnGuide" title="使い方">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7M12 17h.01"/></svg>
+    <span class="lbl-sm">使い方</span>
+  </button>
+  <button class="btn" id="btnAdd">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="lbl-sm">人を追加</span>
+  </button>
+  <button class="btn icon" id="btnMenu" title="メニュー">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+  </button>
+</header>
+
+<div id="stage">
+  <div id="canvas">
+    <svg id="links"></svg>
+    <div id="nodes"></div>
+  </div>
+
+  <!-- empty state -->
+  <div id="empty">
+    <div class="box">
+      <div class="en">Family Tree</div>
+      <h1 class="serif">家系図をつくる</h1>
+      <p>名前を入れていくだけで、つながりの美しい家系図が自動でできあがります。<br>姓がちがっても、血のつながりがあれば記録できます。</p>
+      <div class="acts">
+        <button class="btn accent" id="emptyStart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          最初のひとりを追加する
+        </button>
+        <button class="btn" id="emptySample">サンプルの家系図を見る</button>
+        <button class="btn ghost" id="emptyGuide">はじめての方へ（使い方）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="zoomctl">
+  <button class="btn" id="zoomIn" title="拡大">＋</button>
+  <button class="btn" id="zoomReset" title="全体表示" style="font-size:15px;">⤢</button>
+  <button class="btn" id="zoomOut" title="縮小">－</button>
+</div>
+
+<div class="legend">
+  <span class="dot"><span class="sw" style="background:var(--male)"></span>男性</span>
+  <span class="dot"><span class="sw" style="background:var(--female)"></span>女性</span>
+  <span class="dot"><span class="sw" style="background:var(--accent)"></span>婚姻</span>
+  <span class="dot">縦線＝血のつながり</span>
+</div>
+
+<!-- ========== Add / Edit person modal ========== -->
+<div class="overlay" id="formOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2 id="formTitle">人を追加</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <div class="relctx" id="relCtx" hidden></div>
+      <form id="personForm">
+        <div class="row2">
+          <div class="field">
+            <label>姓 <span class="hint">（任意）</span></label>
+            <input type="text" name="last" placeholder="例：山田" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>名 <span class="hint">必須</span></label>
+            <input type="text" name="first" placeholder="例：太郎" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>よみがな <span class="hint">（任意）</span></label>
+          <input type="text" name="yomi" placeholder="例：やまだ たろう" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>性別</label>
+          <div class="seg">
+            <label><input type="radio" name="gender" value="male"><span>男性</span></label>
+            <label><input type="radio" name="gender" value="female"><span>女性</span></label>
+            <label><input type="radio" name="gender" value="other" checked><span>その他・不明</span></label>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>生年月日 <span class="hint">（任意）</span></label>
+            <input type="date" name="birth" min="1850-01-01">
+          </div>
+          <div class="field">
+            <label>没年月日 <span class="hint">（任意）</span></label>
+            <input type="date" name="death" min="1850-01-01">
+          </div>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" name="alive" checked> ご存命です（存命中）</label>
+        </div>
+        <div class="field">
+          <label>ひとことメモ <span class="hint">（任意）出身地・職業・旧姓など</span></label>
+          <textarea name="note" placeholder="例：旧姓 佐藤。東京都出身。"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" data-close>キャンセル</button>
+          <button type="submit" class="btn accent" id="formSubmit">追加する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Detail modal ========== -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>プロフィール</h2><button class="x" data-close>×</button></div>
+    <div class="bd" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ========== Guide modal ========== -->
+<div class="overlay" id="guideOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>使い方ガイド</h2><button class="x" data-close>×</button></div>
+    <div class="bd guide">
+      <p class="lead">むずかしい操作はありません。<b>名前を入れていくだけ</b>で、家系図ができあがります。スマホでも、パソコンでも使えます。</p>
+      <div class="step"><div class="num serif">1</div><div><h3>最初のひとりを追加します</h3><p>「人を追加」ボタンを押して、ご本人やご先祖など、起点になる方の名前を入れます。生年月日などは、わかる範囲で大丈夫です。</p></div></div>
+      <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。</p></div></div>
+      <div class="step"><div class="num serif">3</div><div><h3>生年月日・没年を見る</h3><p>名前にふれると、生まれた日や（ご記入があれば）亡くなった日が表示されます。年齢や享年も自動で計算します。</p></div></div>
+      <div class="step"><div class="num serif">4</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
+      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。入力した内容は、この端末の中に自動で保存されます。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Menu modal ========== -->
+<div class="overlay" id="menuOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" style="max-width:420px;">
+    <div class="hd"><h2>メニュー</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <div class="acts" style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
+        <button class="btn" id="menuExport" style="justify-content:flex-start;padding:14px;">データを書き出す（バックアップ）</button>
+        <button class="btn" id="menuImport" style="justify-content:flex-start;padding:14px;">データを読み込む</button>
+        <button class="btn danger" id="menuClear" style="justify-content:flex-start;padding:14px;">すべて消去してまっさらにする</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+/* =========================================================
+   家系図 — Kinship   (vanilla JS, single file, no deps)
+   ========================================================= */
+
+/* ---------- constants / geometry ---------- */
+const CARD_W = 158, CARD_H = 70;
+const COUPLE_GAP = 26;        // gap between two cards of a couple
+const SIB_GAP = 30;           // gap between sibling units
+const V_GAP = 92;             // vertical gap between generations
+const STORE_KEY = "kinship.familytree.v1";
+
+/* ---------- state ---------- */
+let state = { persons:{}, order:[] };
+let view = { x:60, y:90, k:1 };
+let lastAddedId = null;
+
+/* ---------- helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
+const uid = () => "p"+Math.random().toString(36).slice(2,9);
+function fullName(p){ return ((p.last||"")+" "+(p.first||"")).trim() || "（名前未設定）"; }
+
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ const d=JSON.parse(raw);
+    if(d && d.persons){ state=d; if(!state.order) state.order=Object.keys(state.persons); } } }catch(e){}
+}
+
+/* ---------- data model ----------
+ person = { id, last, first, yomi, gender, birth, death, alive, note,
+            parents:[id], spouses:[id] }   children are derived  */
+function newPerson(data){
+  return Object.assign({ id:uid(), last:"", first:"", yomi:"", gender:"other",
+    birth:"", death:"", alive:true, note:"", parents:[], spouses:[] }, data);
+}
+function addPerson(data){
+  const p = newPerson(data);
+  state.persons[p.id]=p; state.order.push(p.id);
+  return p.id;
+}
+function childrenOf(id){
+  return state.order.filter(cid => state.persons[cid].parents.includes(id));
+}
+function link(aId,bId,field){
+  const a=state.persons[aId], b=state.persons[bId];
+  if(a && !a[field].includes(bId)) a[field].push(bId);
+  if(b && !b[field].includes(aId)) b[field].push(aId);
+}
+function setSpouses(aId,bId){ link(aId,bId,"spouses"); }
+function addParentLink(childId,parentId){
+  const c=state.persons[childId];
+  if(!c.parents.includes(parentId)) c.parents.push(parentId);
+}
+
+/* delete a person and clean up references */
+function deletePerson(id){
+  delete state.persons[id];
+  state.order = state.order.filter(x=>x!==id);
+  for(const pid of state.order){
+    const p=state.persons[pid];
+    p.parents = p.parents.filter(x=>x!==id);
+    p.spouses = p.spouses.filter(x=>x!==id);
+  }
+}
+
+/* =========================================================
+   GENERATION ASSIGNMENT (relaxation)
+   ========================================================= */
+function computeGenerations(){
+  const gen={}; for(const id of state.order) gen[id]=0;
+  let changed=true, guard=0;
+  while(changed && guard<2000){
+    changed=false; guard++;
+    // children must be below parents
+    for(const id of state.order){
+      const p=state.persons[id];
+      for(const par of p.parents){
+        if(gen[par]==null) continue;
+        if(gen[id] < gen[par]+1){ gen[id]=gen[par]+1; changed=true; }
+      }
+    }
+    // spouses share the same generation (take max)
+    for(const id of state.order){
+      const p=state.persons[id];
+      for(const s of p.spouses){
+        if(gen[s]==null) continue;
+        const m=Math.max(gen[id],gen[s]);
+        if(gen[id]!==m){gen[id]=m;changed=true;}
+        if(gen[s]!==m){gen[s]=m;changed=true;}
+      }
+    }
+  }
+  return gen;
+}
+
+/* =========================================================
+   LAYOUT  (couple-aware tidy tree + collision resolution)
+   ========================================================= */
+function buildLayout(){
+  const gen = computeGenerations();
+  const visited = new Set();
+  const units = [];   // all drawing units
+
+  function unitWidth(u){ return u.members.length*CARD_W + (u.members.length-1)*COUPLE_GAP; }
+
+  // build a unit anchored at personId, pulling in one (unvisited) spouse
+  function buildUnit(personId){
+    visited.add(personId);
+    const p = state.persons[personId];
+    const members=[personId];
+    // attach an unvisited spouse at the same generation
+    for(const s of p.spouses){
+      if(!visited.has(s) && state.persons[s] && gen[s]===gen[personId]){
+        visited.add(s); members.push(s); break;
+      }
+    }
+    const u = { members, anchor:personId, depth:gen[personId], children:[], x:0 };
+    units.push(u);
+    // gather children of any member, in input order, not yet visited
+    const kidIds = [];
+    for(const m of members){
+      for(const c of childrenOf(m)){
+        if(!visited.has(c) && !kidIds.includes(c)) kidIds.push(c);
+      }
+    }
+    for(const cid of kidIds){
+      if(visited.has(cid)) continue;
+      u.children.push(buildUnit(cid));
+    }
+    return u;
+  }
+
+  // roots: top-most blood ancestors (no parents in dataset), ordered by generation then input
+  const roots=[];
+  const sorted=[...state.order].sort((a,b)=> (gen[a]-gen[b]) || (state.order.indexOf(a)-state.order.indexOf(b)));
+  for(const id of sorted){
+    if(visited.has(id)) continue;
+    const p=state.persons[id];
+    const hasParentInSet = p.parents.some(pp=>state.persons[pp]);
+    if(!hasParentInSet) roots.push(buildUnit(id));
+  }
+  // any leftovers (cycles / orphan spouses) become their own roots
+  for(const id of sorted){ if(!visited.has(id)) roots.push(buildUnit(id)); }
+
+  // ---- initial x via post-order (leaves laid left→right) ----
+  let cursor=0;
+  const stepFor = u => Math.max(unitWidth(u), CARD_W) + SIB_GAP;
+  function firstWalk(u){
+    if(u.children.length===0){
+      u.x = cursor + unitWidth(u)/2;
+      cursor += stepFor(u);
+    } else {
+      u.children.forEach(firstWalk);
+      const f=u.children[0], l=u.children[u.children.length-1];
+      u.x = (f.x + l.x)/2;
+      // make sure the unit itself fits where it sits
+      const need = cursor; // not used; spacing handled in resolve
+    }
+  }
+  // space roots apart
+  for(const r of roots){ firstWalk(r); cursor += SIB_GAP*2; }
+
+  // ---- collision resolution + parent recentre (few iterations) ----
+  function shift(u,d){ u.x+=d; u.children.forEach(c=>shift(c,d)); }
+  const byDepth={};
+  for(const u of units){ (byDepth[u.depth]=byDepth[u.depth]||[]).push(u); }
+  const depths=Object.keys(byDepth).map(Number).sort((a,b)=>a-b);
+
+  for(let iter=0; iter<6; iter++){
+    // resolve overlaps per row, left→right
+    for(const d of depths){
+      const row=byDepth[d].slice().sort((a,b)=>a.x-b.x);
+      for(let i=1;i<row.length;i++){
+        const prev=row[i-1], cur=row[i];
+        const minGap = unitWidth(prev)/2 + unitWidth(cur)/2 + SIB_GAP;
+        const delta = (prev.x + minGap) - cur.x;
+        if(delta>0.5) shift(cur, delta);
+      }
+    }
+    // recentre parents over their children, bottom-up
+    for(let di=depths.length-1; di>=0; di--){
+      for(const u of byDepth[depths[di]]){
+        if(u.children.length){
+          const f=u.children[0], l=u.children[u.children.length-1];
+          const target=(f.x+l.x)/2;
+          u.x += (target-u.x)*0.85;
+        }
+      }
+    }
+  }
+
+  // ---- normalise to positive coords & compute card rects ----
+  let minX=Infinity, maxX=-Infinity, maxDepth=0;
+  for(const u of units){
+    minX=Math.min(minX, u.x-unitWidth(u)/2);
+    maxX=Math.max(maxX, u.x+unitWidth(u)/2);
+    maxDepth=Math.max(maxDepth,u.depth);
+  }
+  if(!isFinite(minX)) minX=0;
+  const pad=40;
+  const rects={}; // id -> {x,y,cx,cy}
+  for(const u of units){
+    const w=unitWidth(u);
+    const left = u.x - w/2 - minX + pad;
+    const y = u.depth*(CARD_H+V_GAP) + pad;
+    u.members.forEach((mid,i)=>{
+      const x = left + i*(CARD_W+COUPLE_GAP);
+      rects[mid] = { x, y, cx:x+CARD_W/2, cy:y+CARD_H/2 };
+    });
+    u._left=left; u._y=y;
+    // anchor card centre x (anchor is members[0])
+    u._anchorCx = rects[u.anchor].cx;
+    u._coupleCx = left + w/2;
+  }
+  const width = (maxX-minX) + pad*2;
+  const height = maxDepth*(CARD_H+V_GAP) + CARD_H + pad*2;
+  return { units, rects, gen, width, height };
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const stage=$("#stage"), canvas=$("#canvas"), nodes=$("#nodes"), links=$("#links"), empty=$("#empty");
+
+function genderClass(g){ return g==="male"?"male":g==="female"?"female":""; }
+
+function render(){
+  const count = state.order.length;
+  empty.style.display = count? "none":"flex";
+  nodes.innerHTML=""; links.innerHTML="";
+  if(!count){ return; }
+
+  const L = buildLayout();
+  canvas.style.width=L.width+"px"; canvas.style.height=L.height+"px";
+  links.setAttribute("width", L.width); links.setAttribute("height", L.height);
+  links.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
+
+  // ----- connectors -----
+  const svgns="http://www.w3.org/2000/svg";
+  function path(d, cls){
+    const p=document.createElementNS(svgns,"path");
+    p.setAttribute("d",d); p.setAttribute("class","link-path"+(cls?" "+cls:""));
+    links.appendChild(p); return p;
+  }
+  function isNew(id){ return id===lastAddedId; }
+
+  for(const u of L.units){
+    // marriage connector
+    if(u.members.length===2){
+      const a=L.rects[u.members[0]], b=L.rects[u.members[1]];
+      const y=a.cy;
+      const d=`M ${a.x+CARD_W} ${y} L ${b.x} ${y}`;
+      const isNewM = u.members.some(isNew);
+      const pp=path(d,"marriage"+(isNewM?" enter":""));
+      if(isNewM){ const len=Math.abs(b.x-(a.x+CARD_W)); pp.style.setProperty("--len",len); }
+      // ring at centre
+      const ring=document.createElementNS(svgns,"circle");
+      ring.setAttribute("cx",(a.x+CARD_W+b.x)/2); ring.setAttribute("cy",y);
+      ring.setAttribute("r","4.5"); ring.setAttribute("class","link-ring");
+      links.appendChild(ring);
+    }
+    // children connectors
+    if(u.children.length){
+      const startX = u.members.length===2 ? u._coupleCx : u._anchorCx;
+      const parentBottom = u._y + CARD_H;
+      const busY = parentBottom + V_GAP*0.45;
+      const cxs = u.children.map(c=>c._anchorCx);
+      const minCx=Math.min(...cxs), maxCx=Math.max(...cxs);
+      const anyNew = u.children.some(c=>c.members.some(isNew)) || u.members.some(isNew);
+      // vertical drop from parents to bus
+      let d=`M ${startX} ${parentBottom} L ${startX} ${busY}`;
+      // horizontal bus
+      d+=` M ${minCx} ${busY} L ${maxCx} ${busY}`;
+      // drops to each child
+      for(const c of u.children){
+        d+=` M ${c._anchorCx} ${busY} L ${c._anchorCx} ${c._y}`;
+      }
+      const pp=path(d, anyNew?"enter":"");
+      if(anyNew){ pp.style.setProperty("--len", 1200); }
+    }
+  }
+
+  // ----- cards -----
+  for(const id of state.order){
+    const p=state.persons[id]; const r=L.rects[id]; if(!r) continue;
+    const c=el("div","card "+genderClass(p.gender)+(p.alive?"":" deceased"));
+    c.style.left=r.x+"px"; c.style.top=r.y+"px";
+    c.style.width=CARD_W+"px"; c.style.height=CARD_H+"px";
+    c.dataset.id=id;
+    if(id===lastAddedId) c.classList.add("enter");
+
+    const nm=el("div","nm"); nm.textContent=fullName(p); c.appendChild(nm);
+    if(p.yomi){ const y=el("div","yomi"); y.textContent=p.yomi; c.appendChild(y); }
+    const meta=el("div","meta"); meta.textContent=lifeShort(p); if(meta.textContent) c.appendChild(meta);
+    if(!p.alive){ const dm=el("div","dec-mark"); dm.textContent="✦"; dm.title="故人"; c.appendChild(dm); }
+
+    // quick-add buttons
+    const q=el("div","quick");
+    [["spouse","配偶者"],["child","子"],["parent","親"],["sibling","きょうだい"]].forEach(([k,lab])=>{
+      const b=el("button"); b.textContent="＋"+lab; b.dataset.rel=k; b.dataset.target=id;
+      b.addEventListener("click",e=>{ e.stopPropagation(); openForm({relation:k, targetId:id}); });
+      q.appendChild(b);
+    });
+    c.appendChild(q);
+
+    c.addEventListener("click",()=>openDetail(id));
+    nodes.appendChild(c);
+  }
+
+  lastAddedId=null; // animation runs once
+}
+
+function lifeShort(p){
+  const by = p.birth? p.birth.slice(0,4) : "";
+  if(!by && p.alive) return "";
+  if(!p.alive){
+    const dy = p.death? p.death.slice(0,4):"";
+    return by||dy ? `${by||"?"}–${dy||"?"}` : "故人";
+  }
+  return by? `${by}–` : "";
+}
+
+/* =========================================================
+   DATE / AGE formatting (Japanese)
+   ========================================================= */
+function fmtDate(s){
+  if(!s) return "";
+  const [y,m,d]=s.split("-").map(Number);
+  return `${y}年${m}月${d}日`;
+}
+function ageFrom(birth, end){
+  if(!birth) return null;
+  const [by,bm,bd]=birth.split("-").map(Number);
+  const e = end? end.split("-").map(Number) : null;
+  const now = e? new Date(e[0],e[1]-1,e[2]) : new Date();
+  let age = now.getFullYear()-by;
+  const mm = (now.getMonth()+1)-bm;
+  if(mm<0 || (mm===0 && now.getDate()<bd)) age--;
+  return age>=0? age : null;
+}
+
+/* =========================================================
+   DETAIL view
+   ========================================================= */
+const detailOverlay=$("#detailOverlay"), detailBody=$("#detailBody");
+function relationLabelList(p){
+  const map={spouse:[],parent:[],child:[]};
+  // not heavily used; kept simple
+  return map;
+}
+function openDetail(id){
+  const p=state.persons[id]; if(!p) return;
+  const g = p.gender;
+  let html="";
+  html += `<div class="detail-name serif">${esc(fullName(p))}</div>`;
+  if(p.yomi) html += `<div class="detail-yomi">${esc(p.yomi)}</div>`;
+  html += `<div class="detail-badges">`;
+  html += `<span class="badge ${g==="male"?"g-male":g==="female"?"g-female":""}">${g==="male"?"男性":g==="female"?"女性":"その他・不明"}</span>`;
+  html += `<span class="badge">${p.alive?"存命":"故人"}</span>`;
+  const a = ageFrom(p.birth, p.alive?null:p.death);
+  if(a!=null) html += `<span class="badge">${p.alive?"満"+a+"歳":"享年"+a}</span>`;
+  html += `</div>`;
+
+  html += `<div class="dl">`;
+  if(p.birth) html += item("生年月日", fmtDate(p.birth));
+  if(!p.alive && p.death) html += item("没年月日", fmtDate(p.death));
+  // relationships
+  const sp = p.spouses.filter(x=>state.persons[x]).map(x=>fullName(state.persons[x]));
+  const par = p.parents.filter(x=>state.persons[x]).map(x=>fullName(state.persons[x]));
+  const kids = childrenOf(id).map(x=>fullName(state.persons[x]));
+  if(par.length) html += item("親", par.join("、"));
+  if(sp.length) html += item("配偶者", sp.join("、"));
+  if(kids.length) html += item("子ども", kids.join("、"));
+  if(p.note) html += `<div class="item"><div class="k">メモ</div><div class="v note">${esc(p.note)}</div></div>`;
+  html += `</div>`;
+
+  html += `<div class="rel-actions"><div class="ttl">この人につながる人を追加</div><div class="rel-grid">
+    <button class="btn" data-rel="spouse">＋ 配偶者（夫・妻）</button>
+    <button class="btn" data-rel="child">＋ 子ども</button>
+    <button class="btn" data-rel="parent">＋ 親（父・母）</button>
+    <button class="btn" data-rel="sibling">＋ きょうだい</button>
+  </div></div>`;
+
+  html += `<div class="danger-row">
+    <button class="btn" id="editBtn">この人を編集</button>
+    <button class="btn danger" id="delBtn">削除</button>
+  </div>`;
+
+  detailBody.innerHTML=html;
+  detailBody.querySelectorAll("[data-rel]").forEach(b=>{
+    b.addEventListener("click",()=>{ closeOverlay(detailOverlay); openForm({relation:b.dataset.rel, targetId:id}); });
+  });
+  $("#editBtn").addEventListener("click",()=>{ closeOverlay(detailOverlay); openForm({editId:id}); });
+  $("#delBtn").addEventListener("click",()=>{
+    if(confirm(`「${fullName(p)}」を削除します。よろしいですか？\n（つながりの線も外れます）`)){
+      deletePerson(id); save(); render(); closeOverlay(detailOverlay); toast("削除しました");
+    }
+  });
+  openOverlay(detailOverlay);
+}
+function item(k,v){ return `<div class="item"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`; }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* =========================================================
+   ADD / EDIT FORM
+   ========================================================= */
+const formOverlay=$("#formOverlay"), personForm=$("#personForm"),
+      relCtx=$("#relCtx"), formTitle=$("#formTitle"), formSubmit=$("#formSubmit");
+let formMode=null; // {relation,targetId} | {editId} | null(first)
+
+const REL_TEXT={
+  spouse:t=>`<b>${esc(fullName(t))}</b> さんの <b>配偶者（夫・妻）</b>を追加します。`,
+  child:t=>`<b>${esc(fullName(t))}</b> さんの <b>子ども</b>を追加します。${t.spouses.filter(x=>state.persons[x]).length?"（配偶者がいる場合は、その子どもとして記録します）":""}`,
+  parent:t=>`<b>${esc(fullName(t))}</b> さんの <b>親（父・母）</b>を追加します。`,
+  sibling:t=>`<b>${esc(fullName(t))}</b> さんの <b>きょうだい</b>を追加します。${t.parents.filter(x=>state.persons[x]).length?"（同じ親の子どもとして記録します）":"（先に親を登録すると、よりきれいに並びます）"}`,
+};
+
+function openForm(mode){
+  formMode=mode||{};
+  personForm.reset();
+  // default gender → other already checked via reset; ensure
+  personForm.gender.value="other";
+  if(formMode.editId){
+    const p=state.persons[formMode.editId];
+    formTitle.textContent="この人を編集";
+    formSubmit.textContent="保存する";
+    relCtx.hidden=true;
+    personForm.last.value=p.last||""; personForm.first.value=p.first||"";
+    personForm.yomi.value=p.yomi||""; personForm.gender.value=p.gender||"other";
+    personForm.birth.value=p.birth||""; personForm.death.value=p.death||"";
+    personForm.alive.checked=!!p.alive; personForm.note.value=p.note||"";
+  } else if(formMode.relation){
+    const t=state.persons[formMode.targetId];
+    formTitle.textContent="人を追加";
+    formSubmit.textContent="追加する";
+    relCtx.hidden=false;
+    relCtx.innerHTML=REL_TEXT[formMode.relation](t);
+  } else {
+    formTitle.textContent="最初のひとりを追加";
+    formSubmit.textContent="追加する";
+    relCtx.hidden=true;
+  }
+  openOverlay(formOverlay);
+  setTimeout(()=>personForm.first.focus(), 320);
+}
+
+personForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  const fd=new FormData(personForm);
+  const data={
+    last:(fd.get("last")||"").trim(),
+    first:(fd.get("first")||"").trim(),
+    yomi:(fd.get("yomi")||"").trim(),
+    gender:fd.get("gender")||"other",
+    birth:fd.get("birth")||"",
+    death:fd.get("death")||"",
+    alive:fd.get("alive")==="on",
+    note:(fd.get("note")||"").trim(),
+  };
+  if(data.alive) data.death="";
+
+  if(formMode.editId){
+    Object.assign(state.persons[formMode.editId], data);
+    save(); render(); closeOverlay(formOverlay); toast("保存しました");
+    return;
+  }
+
+  // create + wire relationship
+  const newId = addPerson(data);
+  const rel=formMode.relation, tId=formMode.targetId;
+  if(rel && tId && state.persons[tId]){
+    const t=state.persons[tId];
+    if(rel==="spouse"){ setSpouses(newId,tId); }
+    else if(rel==="child"){
+      addParentLink(newId,tId);
+      const sps=t.spouses.filter(x=>state.persons[x]);
+      if(sps.length===1) addParentLink(newId,sps[0]);
+    }
+    else if(rel==="parent"){
+      addParentLink(tId,newId);
+      const existing=t.parents.filter(x=>state.persons[x] && x!==newId);
+      if(existing.length===1) setSpouses(newId, existing[0]); // co-parents become spouses
+    }
+    else if(rel==="sibling"){
+      for(const par of t.parents){ if(state.persons[par]) addParentLink(newId,par); }
+    }
+  }
+  lastAddedId=newId;
+  save();
+  closeOverlay(formOverlay);
+  render();
+  focusOnNode(newId, true);
+  sparkleAt(newId);
+  toast("追加しました ✦");
+});
+
+/* =========================================================
+   OVERLAYS
+   ========================================================= */
+function openOverlay(o){ o.classList.add("open"); }
+function closeOverlay(o){ o.classList.remove("open"); }
+document.querySelectorAll(".overlay").forEach(o=>{
+  o.addEventListener("click",e=>{ if(e.target===o) closeOverlay(o); });
+  o.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeOverlay(o)));
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(closeOverlay); });
+
+/* =========================================================
+   PAN / ZOOM
+   ========================================================= */
+function applyView(){ canvas.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`; }
+function clampK(k){ return Math.min(2.2, Math.max(0.25, k)); }
+
+let dragging=false, sx=0, sy=0, vx=0, vy=0, moved=false;
+stage.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".card")) return; // let card handle
+  dragging=true; moved=false; stage.classList.add("grabbing");
+  sx=e.clientX; sy=e.clientY; vx=view.x; vy=view.y;
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  view.x=vx+(e.clientX-sx); view.y=vy+(e.clientY-sy);
+  if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>4) moved=true;
+  applyView();
+});
+stage.addEventListener("pointerup",e=>{ dragging=false; stage.classList.remove("grabbing"); });
+stage.addEventListener("pointercancel",()=>{ dragging=false; stage.classList.remove("grabbing"); });
+
+stage.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const rect=stage.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const old=view.k, nk=clampK(view.k*(e.deltaY<0?1.12:0.89));
+  // zoom toward cursor
+  view.x = mx - (mx-view.x)*(nk/old);
+  view.y = my - (my-view.y)*(nk/old);
+  view.k=nk; applyView();
+},{passive:false});
+
+// pinch zoom
+let pinch=null;
+stage.addEventListener("touchstart",e=>{
+  if(e.touches.length===2){
+    pinch={ d:dist(e.touches), k:view.k,
+      mx:(e.touches[0].clientX+e.touches[1].clientX)/2,
+      my:(e.touches[0].clientY+e.touches[1].clientY)/2, vx:view.x, vy:view.y };
+  }
+},{passive:false});
+stage.addEventListener("touchmove",e=>{
+  if(pinch && e.touches.length===2){
+    e.preventDefault();
+    const nd=dist(e.touches);
+    const nk=clampK(pinch.k*(nd/pinch.d));
+    const rect=stage.getBoundingClientRect();
+    const mx=pinch.mx-rect.left, my=pinch.my-rect.top;
+    view.x = mx - (mx-pinch.vx)*(nk/pinch.k);
+    view.y = my - (my-pinch.vy)*(nk/pinch.k);
+    view.k=nk; applyView();
+  }
+},{passive:false});
+stage.addEventListener("touchend",e=>{ if(e.touches.length<2) pinch=null; });
+function dist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+
+$("#zoomIn").addEventListener("click",()=>zoomBy(1.18));
+$("#zoomOut").addEventListener("click",()=>zoomBy(0.85));
+$("#zoomReset").addEventListener("click",fitToScreen);
+function zoomBy(f){
+  const rect=stage.getBoundingClientRect();
+  const mx=rect.width/2, my=rect.height/2, old=view.k, nk=clampK(view.k*f);
+  view.x = mx-(mx-view.x)*(nk/old); view.y=my-(my-view.y)*(nk/old);
+  view.k=nk; applyView();
+}
+function fitToScreen(){
+  if(!state.order.length) return;
+  const L=buildLayout();
+  const rect=stage.getBoundingClientRect();
+  const k=clampK(Math.min((rect.width-60)/L.width, (rect.height-60)/L.height, 1.4));
+  view.k=k;
+  view.x=(rect.width - L.width*k)/2;
+  view.y=Math.max(20,(rect.height - L.height*k)/2);
+  animateView();
+}
+
+/* smooth focus on a specific node */
+function focusOnNode(id, gentle){
+  const L=buildLayout(); const r=L.rects[id]; if(!r) return;
+  const rect=stage.getBoundingClientRect();
+  const targetK = gentle? clampK(Math.max(view.k,0.8)) : view.k;
+  const tx = rect.width/2 - r.cx*targetK;
+  const ty = rect.height*0.42 - r.cy*targetK;
+  animateView(tx,ty,targetK);
+}
+let rafView=null;
+function animateView(tx,ty,tk){
+  tx = tx==null? view.x : tx; ty = ty==null? view.y : ty; tk = tk==null? view.k : tk;
+  const sx0=view.x, sy0=view.y, sk0=view.k; const t0=performance.now(), dur=520;
+  if(rafView) cancelAnimationFrame(rafView);
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+    view.x=sx0+(tx-sx0)*e; view.y=sy0+(ty-sy0)*e; view.k=sk0+(tk-sk0)*e;
+    applyView();
+    if(p<1) rafView=requestAnimationFrame(step);
+  }
+  rafView=requestAnimationFrame(step);
+}
+
+/* sparkle burst at a node (called after render) */
+function sparkleAt(id){
+  const L=buildLayout(); const r=L.rects[id]; if(!r) return;
+  const n=10;
+  for(let i=0;i<n;i++){
+    const s=el("div","spark");
+    s.style.left=(r.cx)+"px"; s.style.top=(r.cy)+"px";
+    const ang=(Math.PI*2*i/n)+Math.random()*0.5, dd=40+Math.random()*40;
+    s.style.setProperty("--dx",(Math.cos(ang)*dd)+"px");
+    s.style.setProperty("--dy",(Math.sin(ang)*dd)+"px");
+    nodes.appendChild(s);
+    requestAnimationFrame(()=>s.classList.add("go"));
+    setTimeout(()=>s.remove(),900);
+  }
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+let toastT=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* =========================================================
+   MENU actions
+   ========================================================= */
+$("#btnMenu").addEventListener("click",()=>openOverlay($("#menuOverlay")));
+$("#btnGuide").addEventListener("click",()=>openOverlay($("#guideOverlay")));
+$("#btnAdd").addEventListener("click",()=>{
+  if(!state.order.length){ openForm({}); }
+  else openForm({}); // add standalone person; can be linked later via relations
+});
+$("#emptyStart").addEventListener("click",()=>openForm({}));
+$("#emptyGuide").addEventListener("click",()=>openOverlay($("#guideOverlay")));
+$("#emptySample").addEventListener("click",loadSample);
+$("#menuSample").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); loadSample(); });
+$("#menuClear").addEventListener("click",()=>{
+  if(confirm("すべてのデータを消去して、まっさらな状態にします。よろしいですか？")){
+    state={persons:{},order:[]}; save(); render(); closeOverlay($("#menuOverlay")); toast("消去しました");
+  }
+});
+$("#menuExport").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=el("a"); a.href=URL.createObjectURL(blob);
+  a.download="family-tree-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(a.href); toast("書き出しました");
+});
+$("#menuImport").addEventListener("click",()=>$("#importFile").click());
+$("#importFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
+    if(d&&d.persons){ state=d; if(!state.order) state.order=Object.keys(d.persons);
+      save(); render(); fitToScreen(); closeOverlay($("#menuOverlay")); toast("読み込みました"); }
+    else toast("ファイル形式が正しくありません");
+  }catch(err){ toast("読み込みに失敗しました"); } };
+  rd.readAsText(f); e.target.value="";
+});
+
+/* =========================================================
+   SAMPLE family (姓が違っても血のつながりを表現)
+   ========================================================= */
+function loadSample(){
+  if(state.order.length && !confirm("いまのデータを置きかえて、サンプルを表示します。よろしいですか？")) return;
+  state={persons:{},order:[]};
+  const A=addPerson({last:"山田",first:"一郎",yomi:"やまだ いちろう",gender:"male",birth:"1940-03-02",death:"2018-11-20",alive:false,note:"愛知県名古屋市出身。"});
+  const B=addPerson({last:"山田",first:"花子",yomi:"やまだ はなこ",gender:"female",birth:"1943-07-15",alive:true,note:"旧姓 佐藤。"});
+  setSpouses(A,B);
+  // children of A&B
+  const C=addPerson({last:"山田",first:"健太",yomi:"やまだ けんた",gender:"male",birth:"1968-05-10",alive:true});
+  const D=addPerson({last:"鈴木",first:"美咲",yomi:"すずき みさき",gender:"female",birth:"1971-09-22",alive:true,note:"結婚で鈴木姓に。血のつながりは山田家。"});
+  addParentLink(C,A); addParentLink(C,B);
+  addParentLink(D,A); addParentLink(D,B);
+  // C's spouse + kids
+  const E=addPerson({last:"山田",first:"由美",yomi:"やまだ ゆみ",gender:"female",birth:"1970-01-30",alive:true,note:"旧姓 田中。"});
+  setSpouses(C,E);
+  const G=addPerson({last:"山田",first:"翔",yomi:"やまだ しょう",gender:"male",birth:"1998-04-04",alive:true});
+  const H=addPerson({last:"山田",first:"葵",yomi:"やまだ あおい",gender:"female",birth:"2001-12-12",alive:true});
+  addParentLink(G,C); addParentLink(G,E); addParentLink(H,C); addParentLink(H,E);
+  // D (married into 鈴木) spouse + kid
+  const F=addPerson({last:"鈴木",first:"大輔",yomi:"すずき だいすけ",gender:"male",birth:"1969-06-18",alive:true});
+  setSpouses(D,F);
+  const I=addPerson({last:"鈴木",first:"陽菜",yomi:"すずき ひな",gender:"female",birth:"2003-08-08",alive:true,note:"姓は鈴木だが、山田家の血を引く孫。"});
+  addParentLink(I,D); addParentLink(I,F);
+  save(); render(); fitToScreen(); toast("サンプルを表示しました");
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+load();
+applyView();
+render();
+if(state.order.length){ fitToScreen(); }
+else {
+  // gentle first-run: open guide once
+  if(!localStorage.getItem("kinship.seen")){ /* keep empty hero visible */ }
+}
+// expose for debugging
+window.__ft={state, render, loadSample};
+})();
+</script>
+</body>
+</html>

@@ -96,6 +96,8 @@ header.topbar{
 .btn.icon{padding:9px;width:38px;height:38px;justify-content:center;}
 .btn svg{width:18px;height:18px;display:block;}
 .btn .lbl-sm{display:inline;}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:8px;}
+.chip:focus-visible,.crest-opt:focus-visible,.card:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;}
 @media(max-width:680px){
   .brand .sub{display:none;}
   .btn .lbl-sm{display:none;}
@@ -116,6 +118,14 @@ header.topbar{
 }
 /* キャンバスも濃藍の青海波（雲・波つき） */
 #stage.seigaiha{--B:#1c508f;--A:#cfe1f4;}
+/* 背景ひかえめ（樹形を読みやすく） */
+#stage.calm.seigaiha{--B:#eef1f6;--A:#e0e6ee;}
+#stage.calm #seascape{display:none;}
+#stage.calm .link-path{stroke:rgba(40,32,22,.5);}
+#stage.calm .link-path.adopt{stroke:rgba(40,32,22,.5);}
+#stage.calm .link-path.marriage{stroke:var(--accent);}
+#stage.calm .link-ring{fill:var(--paper);stroke:var(--accent);}
+#stage.calm .card{border-color:var(--hair);box-shadow:var(--shadow);}
 /* ランディングの「海」段：濃藍×白の力強い青海波 */
 .sea{--B:#1c508f;--A:#dbe8f7;color:#fdfbf4;}
 /* 背景の雲・波（パンに追従しないアンビエント層） */
@@ -136,6 +146,7 @@ header.topbar{
 /* connector animation */
 .link-path{fill:none;stroke:rgba(244,249,255,.7);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .link-path.marriage{stroke:#f2cf7a;stroke-width:2.2;opacity:.95;}
+.link-path.adopt{stroke:rgba(244,249,255,.7);stroke-width:1.8;stroke-dasharray:5 5;}
 .link-ring{fill:#1c508f;stroke:#f2cf7a;stroke-width:1.8;}
 .link-path.enter{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .7s .05s var(--ease) forwards;}
 @keyframes draw{to{stroke-dashoffset:0;}}
@@ -412,7 +423,7 @@ header.topbar{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
     <span class="lbl-sm">共有</span>
   </button>
-  <button class="btn icon" id="btnMenu" title="メニュー">
+  <button class="btn icon" id="btnMenu" title="メニュー" aria-label="メニュー">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
   </button>
 </header>
@@ -480,14 +491,14 @@ header.topbar{
         <button class="btn link big" data-action="sample">見本を見る ›</button>
       </div>
     </section>
-    <p class="foot">入力した内容は、この端末の中に自動で保存されます　—　いえつなぎ Ietsunagi</p>
+    <p class="foot">入力した内容は、この端末の中だけに保存されます（サーバー送信なし）　—　いえつなぎ Ietsunagi<br><button class="btn link" id="emptyPrivacy" style="font-size:13px;margin-top:6px;">プライバシーとデータについて</button></p>
   </div>
 </div>
 
 <div class="zoomctl">
-  <button class="btn" id="zoomIn" title="拡大">＋</button>
-  <button class="btn" id="zoomReset" title="全体表示" style="font-size:15px;">⤢</button>
-  <button class="btn" id="zoomOut" title="縮小">－</button>
+  <button class="btn" id="zoomIn" title="拡大" aria-label="拡大">＋</button>
+  <button class="btn" id="zoomReset" title="全体表示" aria-label="全体表示" style="font-size:15px;">⤢</button>
+  <button class="btn" id="zoomOut" title="縮小" aria-label="縮小">－</button>
 </div>
 
 <div class="legend">
@@ -495,6 +506,7 @@ header.topbar{
   <span class="dot"><span class="sw" style="background:var(--female)"></span>女性</span>
   <span class="dot"><span class="sw" style="background:var(--accent)"></span>婚姻</span>
   <span class="dot">縦線＝血のつながり</span>
+  <span class="dot">破線＝養子</span>
 </div>
 
 <!-- ========== Add / Edit person modal ========== -->
@@ -532,17 +544,20 @@ header.topbar{
         </div>
         <div class="row2">
           <div class="field">
-            <label>生年月日 <span class="hint">（任意）</span></label>
-            <input type="date" name="birth" min="1850-01-01">
+            <label>生年 <span class="hint">（任意・年だけでも可）</span></label>
+            <input type="text" name="birth" inputmode="numeric" autocomplete="off" placeholder="例：1950 / 1950-03 / 1950-03-02">
           </div>
           <div class="field">
-            <label>没年月日 <span class="hint">（任意）</span></label>
-            <input type="date" name="death" min="1850-01-01">
+            <label>没年 <span class="hint">（任意・年だけでも可）</span></label>
+            <input type="text" name="death" inputmode="numeric" autocomplete="off" placeholder="例：2018 / 2018-11">
           </div>
         </div>
+        <div class="field" id="adoptField" hidden>
+          <label class="check"><input type="checkbox" name="adopted"> 養子・養女として迎えた</label>
+        </div>
         <div class="field">
-          <label>ひとことメモ <span class="hint">（任意）出身地・職業・旧姓など</span></label>
-          <textarea name="note" placeholder="例：旧姓 佐藤。東京都出身。"></textarea>
+          <label>ひとことメモ <span class="hint">（任意）出身地・職業など。※住所や電話などの機微情報は控えめに</span></label>
+          <textarea name="note" placeholder="例：東京都出身。"></textarea>
         </div>
         <div class="form-actions">
           <button type="button" class="btn" data-close>キャンセル</button>
@@ -579,6 +594,9 @@ header.topbar{
       <div class="field">
         <label id="connectWho">つなげる相手</label>
         <select id="connectTarget"></select>
+      </div>
+      <div class="field" id="connectAdoptField" hidden>
+        <label class="check"><input type="checkbox" id="connectAdopt"> 養子・養女としてつなぐ（破線で表示）</label>
       </div>
       <div class="form-actions">
         <button type="button" class="btn" data-close>キャンセル</button>
@@ -649,12 +667,27 @@ header.topbar{
       <div class="step"><div class="num serif">1</div><div><h3>最初のひとりを追加します</h3><p>「人を追加」ボタンを押して、ご本人やご先祖など、起点になる方の名前を入れます。生年月日などは、わかる範囲で大丈夫です。</p></div></div>
       <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。「<b>父母（両親）をまとめて登録</b>」で、お父さん・お母さんを一度に登録することもできます。</p></div></div>
       <div class="step"><div class="num serif">3</div><div><h3>あとから関係をつなげる</h3><p>先にひとりずつ登録した方どうしは、名前にふれて出てくる「<b>すでに登録した人とつなげる</b>」から、あとで関係（配偶者・子ども・親・きょうだい）をつなげられます。</p></div></div>
-      <div class="step"><div class="num serif">4</div><div><h3>旧姓・生年月日・没年月日（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年月日</b>・<b>没年月日</b>は、わかる範囲で入力してください（不明なら空欄のままでOK）。没年月日を入れた方は自動的に故人として扱われ、名前にふれると年齢・享年が表示されます。</p></div></div>
+      <div class="step"><div class="num serif">4</div><div><h3>旧姓・生年・没年（すべて任意）</h3><p>結婚などで名字が変わった方は「<b>旧姓</b>」に入れられます。<b>生年・没年</b>は<b>「年」だけでもOK</b>（例：1950、1950-03、1950-03-02）。わからなければ空欄で大丈夫です。没年を入れた方は自動的に故人として扱われ、年齢・享年（おおよそは「約」付き）が表示されます。<b>養子・養女</b>は子どもの追加時にチェックでき、家系図では<b>破線</b>で表します。</p></div></div>
       <div class="step"><div class="num serif">5</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
       <div class="step"><div class="num serif">6</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
       <div class="step"><div class="num serif">7</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
       <div class="step"><div class="num serif">8</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
       <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。なお、<b>家紋は既定では付きません</b>。名前にふれて「<b>家紋を選ぶ</b>」を押すと、伝統紋・細線紋・現代紋など<b>数百種</b>のオリジナル家紋から、苗字ごとにお好みの一つを選べます（カードや一覧、書き出した画像にも反映）。入力した内容は、この端末の中に自動で保存されます。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Privacy / data modal ========== -->
+<div class="overlay" id="privacyOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>プライバシーとデータ</h2><button class="x" data-close>×</button></div>
+    <div class="bd guide">
+      <p class="lead">あなたと、ご家族の大切な情報を守るために。</p>
+      <div class="step"><div class="num serif">1</div><div><h3>データはこの端末の中だけ</h3><p>入力した内容は<b>この端末（ブラウザ）の中だけ</b>に保存されます。私たちのサーバーに送られたり、公開されたりすることはありません。</p></div></div>
+      <div class="step"><div class="num serif">2</div><div><h3>共有リンクの取り扱い</h3><p>「共有」で作るリンクには家系図のデータが含まれます。<b>信頼できる相手にだけ</b>送ってください。共有時は「生年・没年・メモを含めない」を<b>おすすめ設定（既定でオン）</b>にしています。</p></div></div>
+      <div class="step"><div class="num serif">3</div><div><h3>ご家族の同意を</h3><p>ご存命のご家族の情報を載せるときは、できるだけ<b>ご本人の同意</b>を得ましょう。住所・電話番号・マイナンバーなどの<b>機微な情報は入力しない</b>ことをおすすめします（必要最小限に）。</p></div></div>
+      <div class="step"><div class="num serif">4</div><div><h3>いつでも書き出し・削除できます</h3><p>メニューの「データを書き出す」でバックアップ、「すべて消去」でこの端末から完全に削除できます。各人の「削除」も可能です（直後なら元に戻せます）。</p></div></div>
+      <div class="tip">🔒 端末を共有・譲渡・廃棄するときは、メニューの「すべて消去」でデータを消してからにしてください。</div>
     </div>
   </div>
 </div>
@@ -670,6 +703,8 @@ header.topbar{
         <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
         <button class="btn" id="menuExport" style="justify-content:flex-start;padding:14px;">データを書き出す（バックアップ）</button>
         <button class="btn" id="menuImport" style="justify-content:flex-start;padding:14px;">データを読み込む</button>
+        <button class="btn" id="menuCalm" style="justify-content:flex-start;padding:14px;">背景をひかえめにする</button>
+        <button class="btn" id="menuPrivacy" style="justify-content:flex-start;padding:14px;">プライバシーとデータについて</button>
         <button class="btn danger" id="menuClear" style="justify-content:flex-start;padding:14px;">すべて消去してまっさらにする</button>
       </div>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -684,12 +719,13 @@ header.topbar{
     <div class="bd">
       <p class="share-lead">このリンクを送ると、相手も同じ家系図を見られます。<b>相手の画面で人を追加・編集</b>することもできます。</p>
       <p class="share-lead" style="color:var(--sub);font-size:13.5px;">追加してもらったら、相手に「共有」から新しいリンクを作ってもらい、それを開けば最新の内容を取り込めます。</p>
+      <label class="check" style="margin:4px 0 12px;"><input type="checkbox" id="sharePrivacy" checked> 生年・没年・メモを含めない（プライバシー保護・おすすめ）</label>
       <div class="linkbox">
         <input id="shareLink" readonly value="">
         <button class="btn accent" id="copyLink">コピー</button>
       </div>
       <button class="btn" id="nativeShare" style="width:100%;justify-content:center;padding:13px;">送る（LINE・メールなど）</button>
-      <div class="share-note">※ 家系図のデータはリンクの中に含めて共有します（サーバーには保存・公開されません）。人数が多いとリンクが長くなることがあります。</div>
+      <div class="share-note">※ データはリンクの中に含めて共有します（サーバーには保存・公開されません）。リンクには家族の個人情報が入るため、<b>信頼できる相手にだけ</b>送ってください。ご家族の情報は同意を得て登録しましょう。</div>
     </div>
   </div>
 </div>
@@ -739,18 +775,44 @@ const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.classN
 const uid = () => "p"+Math.random().toString(36).slice(2,9);
 function fullName(p){ return ((p.last||"")+" "+(p.first||"")).trim() || "（名前未設定）"; }
 
-function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+const SCHEMA=2;
+let _quotaWarned=false;
+function save(){
+  try{ state.version=SCHEMA; localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){
+    if(!_quotaWarned){ _quotaWarned=true; toast("保存できませんでした（容量不足の可能性）。メニューの『書き出し』でバックアップを"); }
+  }
+}
+/* 読み込み時に構造を検証・補正（壊れたデータでも落ちないように） */
+function migrate(d){
+  if(!d || typeof d!=="object" || !d.persons) return { persons:{}, order:[], crests:{}, version:SCHEMA };
+  const persons={};
+  for(const id in d.persons){
+    const p=d.persons[id]||{};
+    persons[id]=Object.assign(newPerson({id}), p, { id,
+      parents:Array.isArray(p.parents)?p.parents:[],
+      spouses:Array.isArray(p.spouses)?p.spouses:[] });
+  }
+  let order=Array.isArray(d.order)?d.order.filter(id=>persons[id]):[];
+  for(const id in persons){ if(!order.includes(id)) order.push(id); }   // 取りこぼし回収
+  // 参照の健全化（存在しないIDを除去）
+  for(const id of order){
+    persons[id].parents=persons[id].parents.filter(x=>persons[x] && x!==id);
+    persons[id].spouses=persons[id].spouses.filter(x=>persons[x] && x!==id);
+  }
+  const crests=(d.crests && typeof d.crests==="object")?d.crests:{};
+  return { persons, order, crests, version:SCHEMA };
+}
 function load(){
-  try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ const d=JSON.parse(raw);
-    if(d && d.persons){ state=d; if(!state.order) state.order=Object.keys(state.persons); if(!state.crests) state.crests={}; } } }catch(e){}
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ state=migrate(JSON.parse(raw)); } }catch(e){ state={persons:{},order:[],crests:{},version:SCHEMA}; }
 }
 
 /* ---------- data model ----------
- person = { id, last, first, yomi, gender, birth, death, alive, note,
+ person = { id, last, first, maiden, yomi, gender, birth, death, alive, adopted, note,
             parents:[id], spouses:[id] }   children are derived  */
 function newPerson(data){
   return Object.assign({ id:uid(), last:"", first:"", maiden:"", yomi:"", gender:"other",
-    birth:"", death:"", alive:true, note:"", parents:[], spouses:[] }, data);
+    birth:"", death:"", alive:true, adopted:false, note:"", parents:[], spouses:[] }, data);
 }
 function addPerson(data){
   const p = newPerson(data);
@@ -1180,13 +1242,15 @@ function render(){
       const cxs = u.children.map(c=>c._anchorCx);
       const minCx=Math.min(...cxs), maxCx=Math.max(...cxs);
       const anyNew = u.children.some(c=>c.members.some(isNew)) || u.members.some(isNew);
-      // vertical drop from parents to bus
+      // vertical drop from parents to bus + horizontal bus
       let d=`M ${startX} ${parentBottom} L ${startX} ${busY}`;
-      // horizontal bus
       d+=` M ${minCx} ${busY} L ${maxCx} ${busY}`;
-      // drops to each child
+      // drops to each child（養子は破線）
       for(const c of u.children){
-        d+=` M ${c._anchorCx} ${busY} L ${c._anchorCx} ${c._y}`;
+        const seg=` M ${c._anchorCx} ${busY} L ${c._anchorCx} ${c._y}`;
+        if(state.persons[c.anchor] && state.persons[c.anchor].adopted){
+          path(`M ${c._anchorCx} ${busY} L ${c._anchorCx} ${c._y}`,"adopt");
+        } else d+=seg;
       }
       const pp=path(d, anyNew?"enter":"");
       if(anyNew){ pp.style.setProperty("--len", 1200); }
@@ -1216,7 +1280,9 @@ function render(){
     });
     c.appendChild(q);
 
+    c.setAttribute("role","button"); c.tabIndex=0; c.setAttribute("aria-label",fullName(p)+" の詳細");
     c.addEventListener("click",()=>openDetail(id));
+    c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDetail(id); } });
     nodes.appendChild(c);
   }
 
@@ -1234,22 +1300,38 @@ function lifeShort(p){
 }
 
 /* =========================================================
-   DATE / AGE formatting (Japanese)
+   DATE / AGE — 年のみ・年月のみの概算日付に対応（系図の鉄則）
+   保存形式: "" / "YYYY" / "YYYY-MM" / "YYYY-MM-DD"
    ========================================================= */
-function fmtDate(s){
+function normDate(s){
   if(!s) return "";
-  const [y,m,d]=s.split("-").map(Number);
-  return `${y}年${m}月${d}日`;
+  s=String(s).trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  s=s.replace(/[年月./]/g,"-").replace(/日/g,"").replace(/-+/g,"-").replace(/^-|-$/g,"");
+  const m=s.match(/^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/);
+  if(!m){ const y=s.match(/\d{4}/); return y? y[0] : ""; }
+  let out=m[1];
+  if(m[2]) out+="-"+String(Math.min(12,Math.max(1,+m[2]))).padStart(2,"0");
+  if(m[2]&&m[3]) out+="-"+String(Math.min(31,Math.max(1,+m[3]))).padStart(2,"0");
+  return out;
 }
-function ageFrom(birth, end){
-  if(!birth) return null;
-  const [by,bm,bd]=birth.split("-").map(Number);
-  const e = end? end.split("-").map(Number) : null;
-  const now = e? new Date(e[0],e[1]-1,e[2]) : new Date();
-  let age = now.getFullYear()-by;
-  const mm = (now.getMonth()+1)-bm;
-  if(mm<0 || (mm===0 && now.getDate()<bd)) age--;
-  return age>=0? age : null;
+function dateParts(s){ const a=(s||"").split("-"); return { y:+a[0]||null, m:+a[1]||null, d:+a[2]||null }; }
+function fmtDate(s){
+  const p=dateParts(s); if(!p.y) return "";
+  let o=p.y+"年"; if(p.m) o+=p.m+"月"; if(p.m&&p.d) o+=p.d+"日";
+  return o + (p.m? "" : "頃");
+}
+function ageInfo(birth, end){
+  const b=dateParts(birth); if(!b.y) return null;
+  const e = end? dateParts(end) : null;
+  const now=new Date();
+  const ey = e? (e.y||now.getFullYear()) : now.getFullYear();
+  const em = e? (e.m||1) : now.getMonth()+1;
+  const ed = e? (e.d||1) : now.getDate();
+  const bm=b.m||1, bd=b.d||1;
+  let age=ey-b.y; if(em<bm || (em===bm && ed<bd)) age--;
+  if(age<0) return null;
+  const approx = !b.m || !b.d || (e && (!e.m || !e.d));
+  return { age, approx };
 }
 
 /* =========================================================
@@ -1274,8 +1356,9 @@ function openDetail(id){
   html += `<div class="detail-badges">`;
   html += `<span class="badge ${g==="male"?"g-male":g==="female"?"g-female":""}">${g==="male"?"男性":g==="female"?"女性":"その他・不明"}</span>`;
   html += `<span class="badge">${p.alive?"存命":"故人"}</span>`;
-  const a = ageFrom(p.birth, p.alive?null:p.death);
-  if(a!=null) html += `<span class="badge">${p.alive?"満"+a+"歳":"享年"+a}</span>`;
+  const ai = ageInfo(p.birth, p.alive?null:p.death);
+  if(ai) html += `<span class="badge">${p.alive ? (ai.approx?"約":"満")+ai.age+"歳" : "享年"+ai.age+(ai.approx?"（約）":"")}</span>`;
+  if(p.adopted) html += `<span class="badge">養子・養女</span>`;
   html += `</div>`;
 
   html += `<div class="dl">`;
@@ -1318,8 +1401,10 @@ function openDetail(id){
   const ccb=$("#chooseCrestBtn"); if(ccb) ccb.addEventListener("click",()=>{ closeOverlay(detailOverlay); openCrestChooser(p.last); });
   $("#editBtn").addEventListener("click",()=>{ closeOverlay(detailOverlay); openForm({editId:id}); });
   $("#delBtn").addEventListener("click",()=>{
-    if(confirm(`「${fullName(p)}」を削除します。よろしいですか？\n（つながりの線も外れます）`)){
-      deletePerson(id); save(); render(); closeOverlay(detailOverlay); toast("削除しました");
+    if(confirm(`「${fullName(p)}」を削除します。よろしいですか？\n（つながりの線も外れます。あとで元に戻せます）`)){
+      snapshot();
+      deletePerson(id); save(); render(); closeOverlay(detailOverlay);
+      showBanner(`「${fullName(p)}」を削除しました。`); toast("削除しました");
     }
   });
   openOverlay(detailOverlay);
@@ -1347,6 +1432,8 @@ function openForm(mode){
   const F=personForm.elements;
   const setGender=g=>{ const r=personForm.querySelector('input[name=gender][value="'+(g||"other")+'"]'); if(r) r.checked=true; };
   setGender("other");
+  const adoptField=$("#adoptField");
+  adoptField.hidden = !(formMode.relation==="child" || (formMode.editId && state.persons[formMode.editId] && state.persons[formMode.editId].parents.some(x=>state.persons[x])));
   if(formMode.editId){
     const p=state.persons[formMode.editId];
     formTitle.textContent="この人を編集";
@@ -1356,6 +1443,7 @@ function openForm(mode){
     F.maiden.value=p.maiden||"";
     F.yomi.value=p.yomi||""; setGender(p.gender);
     F.birth.value=p.birth||""; F.death.value=p.death||"";
+    F.adopted.checked=!!p.adopted;
     F.note.value=p.note||"";
   } else if(formMode.relation){
     const t=state.persons[formMode.targetId];
@@ -1375,16 +1463,17 @@ function openForm(mode){
 personForm.addEventListener("submit",e=>{
   e.preventDefault();
   const fd=new FormData(personForm);
-  const death = fd.get("death")||"";
+  const death = normDate(fd.get("death")||"");
   const data={
     last:(fd.get("last")||"").trim(),
     first:(fd.get("first")||"").trim(),
     maiden:(fd.get("maiden")||"").trim(),
     yomi:(fd.get("yomi")||"").trim(),
     gender:fd.get("gender")||"other",
-    birth:fd.get("birth")||"",
+    birth:normDate(fd.get("birth")||""),
     death:death,
-    alive:!death,                 // 没年月日が入っていれば故人とみなす
+    alive:!death,                 // 没年が入っていれば故人とみなす
+    adopted: fd.get("adopted")==="on",
     note:(fd.get("note")||"").trim(),
   };
 
@@ -1419,6 +1508,7 @@ function openConnect(selfId){
   const self=state.persons[selfId]; if(!self) return;
   $("#connectCtx").innerHTML=`<b>${esc(fullName(self))}</b> さんと、すでに登録されている人をつなげます。下で「関係」と「相手」を選んでください。`;
   const sp=document.querySelector('input[name=crel][value=spouse]'); if(sp) sp.checked=true;
+  $("#connectAdopt").checked=false;
   const sel=$("#connectTarget"); sel.innerHTML="";
   for(const id of state.order){ if(id===selfId) continue; const p=state.persons[id];
     const o=el("option"); o.value=id; o.textContent=fullName(p)+(p.birth?`（${p.birth.slice(0,4)}〜）`:""); sel.appendChild(o); }
@@ -1429,6 +1519,7 @@ function updateConnectWho(){
   const r=document.querySelector('input[name=crel]:checked'); if(!r) return;
   const m={spouse:"配偶者にする人",child:"子どもにする人",parent:"親にする人",sibling:"きょうだいにする人"};
   $("#connectWho").textContent=m[r.value];
+  $("#connectAdoptField").hidden = !(r.value==="child" || r.value==="parent");
 }
 document.querySelectorAll('input[name=crel]').forEach(r=>r.addEventListener("change",updateConnectWho));
 $("#connectDo").addEventListener("click",()=>{
@@ -1439,6 +1530,10 @@ $("#connectDo").addEventListener("click",()=>{
   if(rel==="child" && isAncestor(other,connectSelfId)){ toast("その関係はつなげられません（さかのぼってしまいます）"); return; }
   if(rel==="parent" && isAncestor(connectSelfId,other)){ toast("その関係はつなげられません（さかのぼってしまいます）"); return; }
   wireRelation(rel, other, connectSelfId);
+  if($("#connectAdopt").checked){
+    if(rel==="child") state.persons[other].adopted=true;
+    else if(rel==="parent") state.persons[connectSelfId].adopted=true;
+  }
   filterSurname=null; lastAddedId=other;
   save(); closeOverlay(connectOverlay); render(); focusOnNode(other,true); sparkleAt(other);
   toast("つなげました ✦");
@@ -1506,6 +1601,7 @@ document.querySelectorAll(".overlay").forEach(o=>{
   o.addEventListener("click",e=>{ if(e.target===o) closeOverlay(o); });
   o.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeOverlay(o)));
 });
+document.querySelectorAll(".x[data-close]").forEach(b=>b.setAttribute("aria-label","閉じる"));
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(closeOverlay); });
 
 /* =========================================================
@@ -1644,6 +1740,7 @@ $("#btnAdd").addEventListener("click",()=>{
 });
 $("#emptyStart").addEventListener("click",()=>openForm({}));
 $("#emptyGuide").addEventListener("click",()=>openOverlay($("#guideOverlay")));
+$("#emptyPrivacy").addEventListener("click",()=>openOverlay($("#privacyOverlay")));
 $("#emptySample").addEventListener("click",loadSample);
 document.querySelectorAll('#empty [data-action]').forEach(b=>{
   const a=b.dataset.action;
@@ -1680,11 +1777,21 @@ $("#importFile").addEventListener("change",e=>{
   const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader();
   rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
-    if(d&&d.persons){ state=d; if(!state.order) state.order=Object.keys(d.persons); if(!state.crests) state.crests={};
-      save(); render(); fitToScreen(); closeOverlay($("#menuOverlay")); toast("読み込みました"); }
+    if(d&&d.persons){ snapshot(); state=migrate(d); filterSurname=null;
+      save(); render(); fitToScreen(); closeOverlay($("#menuOverlay"));
+      showBanner("データを読み込みました。"); toast("読み込みました"); }
     else toast("ファイル形式が正しくありません");
   }catch(err){ toast("読み込みに失敗しました"); } };
   rd.readAsText(f); e.target.value="";
+});
+$("#menuPrivacy").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openOverlay($("#privacyOverlay")); });
+/* 背景をひかえめに（可読性優先）。設定は端末に保存 */
+function applyCalm(){ const on=localStorage.getItem("kinship.calm")==="1"; stage.classList.toggle("calm",on);
+  const b=$("#menuCalm"); if(b) b.textContent = on? "背景を青海波に戻す" : "背景をひかえめにする"; }
+$("#menuCalm").addEventListener("click",()=>{
+  const on=localStorage.getItem("kinship.calm")==="1";
+  try{ localStorage.setItem("kinship.calm", on?"0":"1"); }catch(e){}
+  applyCalm(); toast(on?"青海波の背景に戻しました":"背景をひかえめにしました");
 });
 
 /* =========================================================
@@ -1692,16 +1799,23 @@ $("#importFile").addEventListener("change",e=>{
    ========================================================= */
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob(b64))); }
-function shareURL(){
-  const payload=b64encode(JSON.stringify(state));
+function shareURL(privacy){
+  let out=state;
+  if(privacy){ // データ最小化：生年・没年・メモを省く
+    const persons={};
+    for(const id in state.persons){ const p=state.persons[id]; persons[id]=Object.assign({},p,{birth:"",death:"",note:""}); }
+    out={persons,order:state.order,crests:state.crests,version:SCHEMA};
+  }
+  const payload=b64encode(JSON.stringify(out));
   return location.origin + location.pathname + "#t=" + payload;
 }
+function refreshShareLink(){ $("#shareLink").value=shareURL($("#sharePrivacy").checked); }
 function openShare(){
   if(!state.order.length){ toast("先に家系図をつくってください"); return; }
-  const url=shareURL();
-  $("#shareLink").value=url;
+  refreshShareLink();
   openOverlay($("#shareOverlay"));
 }
+$("#sharePrivacy").addEventListener("change",refreshShareLink);
 $("#btnShare").addEventListener("click",openShare);
 $("#menuShare").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openShare(); });
 $("#copyLink").addEventListener("click",async ()=>{
@@ -2010,6 +2124,7 @@ function loadSample(){
    ========================================================= */
 load();
 applyView();
+applyCalm();
 const fromShare = loadFromHash();   // 共有リンクで来た場合はそれを読み込む
 if(!fromShare){
   render();

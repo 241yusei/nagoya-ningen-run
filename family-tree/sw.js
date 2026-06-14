@@ -1,5 +1,5 @@
 /* 家系図 — Kinship  service worker (offline-first, same-origin) */
-const CACHE = "kinship-v2";
+const CACHE = "kinship-v3";
 const ASSETS = [
   "./",
   "./index.html",

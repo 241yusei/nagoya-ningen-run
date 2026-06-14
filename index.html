@@ -90,12 +90,32 @@ let PIX=null, pctx=null;
 function ensurePix(){
   if(!PIX){ PIX=document.createElement('canvas'); PIX.width=PW; PIX.height=PH; pctx=PIX.getContext('2d'); pctx.imageSmoothingEnabled=false; }
 }
-// 低解像度バッファを画面へ等倍ブリット（カクッとしたドット拡大）
-function blitPix(c){
-  c.save();
-  c.imageSmoothingEnabled=false;
-  c.drawImage(PIX,0,0,PW,PH,0,0,W,H);
-  c.restore();
+// 現在の画面を低解像度バッファに描画 → 画面へニアレストネイバー拡大
+function drawScreen(c){
+  switch(G.screen){
+    case 'title': drawTitle(c,true); break;   // タイトル名はあとで鮮明に重ねる
+    case 'howto': drawHowto(c); break;
+    case 'charsel': drawCharsel(c); break;
+    case 'coursesel': drawCoursesel(c); break;
+    case 'diffsel': drawDiffsel(c); break;
+    case 'play': drawPlay(c); break;
+    case 'clear': drawClear(c); break;
+    case 'gameover': drawGameover(c); break;
+    case 'gallery': drawGallery(c); break;
+  }
+}
+function presentPixel(){
+  ensurePix();
+  pctx.setTransform(1/PIXEL,0,0,1/PIXEL,0,0);
+  pctx.imageSmoothingEnabled=false;
+  pctx.clearRect(0,0,W,H);
+  drawScreen(pctx);
+  ctx.save();
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(PIX,0,0,PW,PH,0,0,W,H);
+  ctx.restore();
+  // タイトル名（ロゴ）だけは鮮明に上書き
+  if(G.screen==='title') drawLogo(ctx,W/2,160,720);
 }
 
 // ---------- セーブ ----------
@@ -2438,15 +2458,8 @@ function uiHitPlay(p){
 function drawPlay(c){
   const R=RUN;
   const art=COURSE_ART[R.course.bg];
-  // ===== シーンを低解像度バッファ(pctx)に描画 → ドット絵化 =====
-  ensurePix();
-  pctx.setTransform(1/PIXEL,0,0,1/PIXEL,0,0);   // 論理座標(W,H)を低解像度に縮約
-  pctx.imageSmoothingEnabled=false;
-  pctx.clearRect(0,0,W,H);
-  const c0=c;            // 本来の画面コンテキスト（HUD用）
-  c=pctx;                // 以降のシーン描画はバッファへ
   c.save();
-  if(R.shake>0){ c.translate(Math.round((Math.random()-0.5)*9*R.shake/0.35),Math.round((Math.random()-0.5)*7*R.shake/0.35)); }
+  if(R.shake>0){ c.translate((Math.random()-0.5)*9*R.shake/0.35,(Math.random()-0.5)*7*R.shake/0.35); }
   c.translate(0,R.camY);
   BGS[R.course.bg](c,R.dist,R.time);
   drawSky(c,art);
@@ -2506,10 +2519,6 @@ function drawPlay(c){
   drawGrade(c,art);
   if(R.flashT>0){ c.fillStyle='rgba(255,255,255,'+(R.flashT*2.2)+')'; c.fillRect(0,0,W,H); }
   c.restore();
-
-  // ドット絵バッファを画面へ拡大ブリット → HUDは等倍で鮮明に
-  c=c0;
-  blitPix(c);
 
   // ---- HUD ----
   c.fillStyle='rgba(255,255,255,0.86)'; rr(c,12,10,300,64,12); c.fill();
@@ -2606,11 +2615,11 @@ function drawLogo(c,cx,cy,w){
   }
 }
 
-function drawTitle(c){
+function drawTitle(c,skipLogo){
   uiBg(c);
   c.fillStyle='#e7e2d8'; c.fillRect(0,H-90,W,90);
   c.fillStyle='#d8372e'; c.fillRect(0,H-90,W,4);
-  drawLogo(c,W/2,160,720);
+  if(!skipLogo)drawLogo(c,W/2,160,720);
   c.font='bold 17px '+TXT_FONT;c.textAlign='center';c.fillStyle='#6c6a64';
   c.fillText('名古屋の名所を走って学ぶアクションゲーム',W/2,222);
   if(save.goldUnlocked){
@@ -3036,17 +3045,7 @@ function frame(now){
   const wantBgm = G.screen==='play' ? RUN.course.bg
     : (G.screen==='clear'||G.screen==='gameover') ? null : 'menu';
   if((BGM.conf?BGM.conf.key:null)!==wantBgm) bgmSet(wantBgm);
-  switch(G.screen){
-    case 'title': drawTitle(ctx); break;
-    case 'howto': drawHowto(ctx); break;
-    case 'charsel': drawCharsel(ctx); break;
-    case 'coursesel': drawCoursesel(ctx); break;
-    case 'diffsel': drawDiffsel(ctx); break;
-    case 'play': drawPlay(ctx); break;
-    case 'clear': drawClear(ctx); break;
-    case 'gameover': drawGameover(ctx); break;
-    case 'gallery': drawGallery(ctx); break;
-  }
+  presentPixel();
   IN.ptr.clicked=false;
 }
 requestAnimationFrame(frame);
@@ -3055,12 +3054,7 @@ requestAnimationFrame(frame);
 window.__NRUN={
   get G(){return G}, get RUN(){return RUN}, get save(){return save}, IN, DIFF, COURSES,
   tick(sec){ if(G.screen==='play'){const n=Math.round(sec/STEP); for(let i=0;i<n;i++)updatePlay(STEP);} else {G.t+=sec;updFx(sec);} },
-  render(){ switch(G.screen){
-    case 'title':drawTitle(ctx);break; case 'howto':drawHowto(ctx);break;
-    case 'charsel':drawCharsel(ctx);break; case 'coursesel':drawCoursesel(ctx);break;
-    case 'diffsel':drawDiffsel(ctx);break; case 'play':drawPlay(ctx);break;
-    case 'clear':drawClear(ctx);break; case 'gameover':drawGameover(ctx);break;
-    case 'gallery':drawGallery(ctx);break; } },
+  render(){ presentPixel(); },
   start(ci,dk){ G.courseIdx=ci||0; G.diffKey=dk||'normal'; startRun(G.courseIdx,G.diffKey); },
   surfaceAt:(x,yRef)=>RUN?surfaceAt(RUN,x,yRef):0,
   resetSave(){ try{localStorage.removeItem(SAVE_KEY);}catch(e){} loadSave(); },

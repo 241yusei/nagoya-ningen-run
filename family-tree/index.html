@@ -100,17 +100,21 @@ header.topbar{
 }
 
 /* ---------- Stage / canvas ---------- */
-/* 青海波（せいがいは）パターン */
+/* 青海波（せいがいは）— 色は --A(波線) / --B(地) で切替 */
 .seigaiha{
-  background-color:var(--bg);
+  background-color:var(--B,#efe7d6);
   background-image:
-    radial-gradient(circle at 100% 150%, var(--bg) 24%, var(--sei) 25%, var(--sei) 28%, var(--bg) 29%, var(--bg) 36%, var(--sei) 36%, var(--sei) 40%, transparent 40%, transparent),
-    radial-gradient(circle at 0 150%, var(--bg) 24%, var(--sei) 25%, var(--sei) 28%, var(--bg) 29%, var(--bg) 36%, var(--sei) 36%, var(--sei) 40%, transparent 40%, transparent),
-    radial-gradient(circle at 50% 100%, var(--sei) 10%, var(--bg) 11%, var(--bg) 23%, var(--sei) 24%, var(--sei) 30%, var(--bg) 31%, var(--bg) 43%, var(--sei) 44%, var(--sei) 50%, var(--bg) 51%, var(--bg) 63%, var(--sei) 64%, var(--sei) 71%, transparent 71%, transparent),
-    radial-gradient(circle at 100% 50%, var(--sei) 5%, var(--bg) 6%, var(--bg) 15%, var(--sei) 16%, var(--sei) 20%, var(--bg) 21%, var(--bg) 30%, var(--sei) 31%, var(--sei) 35%, var(--bg) 36%, var(--bg) 45%, var(--sei) 46%, var(--sei) 49%, transparent 50%, transparent),
-    radial-gradient(circle at 0 50%, var(--sei) 5%, var(--bg) 6%, var(--bg) 15%, var(--sei) 16%, var(--sei) 20%, var(--bg) 21%, var(--bg) 30%, var(--sei) 31%, var(--sei) 35%, var(--bg) 36%, var(--bg) 45%, var(--sei) 46%, var(--sei) 49%, transparent 50%, transparent);
-  background-size:108px 54px;
+    radial-gradient(circle at 100% 150%, var(--B,#efe7d6) 24%, var(--A,#e0d4b6) 25%, var(--A,#e0d4b6) 28%, var(--B,#efe7d6) 29%, var(--B,#efe7d6) 36%, var(--A,#e0d4b6) 36%, var(--A,#e0d4b6) 40%, transparent 40%, transparent),
+    radial-gradient(circle at 0 150%, var(--B,#efe7d6) 24%, var(--A,#e0d4b6) 25%, var(--A,#e0d4b6) 28%, var(--B,#efe7d6) 29%, var(--B,#efe7d6) 36%, var(--A,#e0d4b6) 36%, var(--A,#e0d4b6) 40%, transparent 40%, transparent),
+    radial-gradient(circle at 50% 100%, var(--A,#e0d4b6) 10%, var(--B,#efe7d6) 11%, var(--B,#efe7d6) 23%, var(--A,#e0d4b6) 24%, var(--A,#e0d4b6) 30%, var(--B,#efe7d6) 31%, var(--B,#efe7d6) 43%, var(--A,#e0d4b6) 44%, var(--A,#e0d4b6) 50%, var(--B,#efe7d6) 51%, var(--B,#efe7d6) 63%, var(--A,#e0d4b6) 64%, var(--A,#e0d4b6) 71%, transparent 71%, transparent),
+    radial-gradient(circle at 100% 50%, var(--A,#e0d4b6) 5%, var(--B,#efe7d6) 6%, var(--B,#efe7d6) 15%, var(--A,#e0d4b6) 16%, var(--A,#e0d4b6) 20%, var(--B,#efe7d6) 21%, var(--B,#efe7d6) 30%, var(--A,#e0d4b6) 31%, var(--A,#e0d4b6) 35%, var(--B,#efe7d6) 36%, var(--B,#efe7d6) 45%, var(--A,#e0d4b6) 46%, var(--A,#e0d4b6) 49%, transparent 50%, transparent),
+    radial-gradient(circle at 0 50%, var(--A,#e0d4b6) 5%, var(--B,#efe7d6) 6%, var(--B,#efe7d6) 15%, var(--A,#e0d4b6) 16%, var(--A,#e0d4b6) 20%, var(--B,#efe7d6) 21%, var(--B,#efe7d6) 30%, var(--A,#e0d4b6) 31%, var(--A,#e0d4b6) 35%, var(--B,#efe7d6) 36%, var(--B,#efe7d6) 45%, var(--A,#e0d4b6) 46%, var(--A,#e0d4b6) 49%, transparent 50%, transparent);
+  background-size:112px 56px;
 }
+/* キャンバスは淡い藍の青海波（樹形が読みやすいよう控えめ） */
+#stage.seigaiha{--B:#e7eef4;--A:#cddae8;}
+/* ランディングの「海」段：濃藍×白の力強い青海波 */
+.sea{--B:#173a6c;--A:#e3ecf7;color:#fdfbf4;}
 #stage{
   position:fixed;inset:52px 0 0 0;overflow:hidden;cursor:grab;touch-action:none;
 }
@@ -144,6 +148,13 @@ header.topbar{
 .card .meta{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card .rel{position:absolute;top:7px;right:9px;font-size:9.5px;color:var(--faint);letter-spacing:.04em;}
 .card .dec-mark{position:absolute;top:7px;right:9px;font-size:10px;color:var(--faint);}
+.card .mon{position:absolute;top:7px;right:8px;width:22px;height:22px;color:var(--line);opacity:.5;pointer-events:none;}
+.card .mon svg{display:block;width:100%;height:100%;}
+.chip .mon{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:6px;}
+.chip .mon svg{display:block;width:100%;height:100%;}
+.detail-head{display:flex;align-items:center;gap:14px;margin-bottom:2px;}
+.detail-crest{width:56px;height:56px;flex:none;color:var(--accent);}
+.detail-crest svg{display:block;width:100%;height:100%;}
 /* the quick add buttons on hover */
 .card .quick{position:absolute;inset:auto 0 0 0;display:flex;gap:2px;justify-content:center;
   background:linear-gradient(0deg,rgba(255,255,255,.96),rgba(255,255,255,0));
@@ -193,6 +204,15 @@ header.topbar{
 .reveal{opacity:0;transform:translateY(28px);transition:opacity 1.05s var(--ease),transform 1.05s var(--ease);}
 .reveal.in{opacity:1;transform:none;}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
+/* 濃藍の段（青海波）の上は白系の文字に */
+#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p{color:#fdfbf4;}
+#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p,#empty .sea .eyebrow,#empty .sea .hanko{text-shadow:0 1px 14px rgba(8,22,46,.5);}
+#empty .sea .eyebrow{color:#ecd08a;}
+#empty .sea .rule{background:#ecd08a;opacity:.95;}
+#empty .sea .hanko{color:#fdfbf4;border-color:#fdfbf4;background:rgba(255,255,255,.1);box-shadow:0 2px 0 rgba(0,0,0,.18);}
+#empty .sea .btn.link{color:#fdfbf4;}
+#empty .sea .btn.link:hover{color:#fff;}
+#empty .sea .tate-label{color:#fdfbf4;opacity:.5;}
 
 /* ---------- Zoom controls ---------- */
 .zoomctl{position:fixed;right:16px;bottom:18px;z-index:35;display:flex;flex-direction:column;gap:8px;}
@@ -377,7 +397,7 @@ header.topbar{
 
   <!-- empty state: 和（日本古来）ランディング -->
   <div id="empty">
-    <section class="hero reveal">
+    <section class="hero sea seigaiha reveal">
       <span class="hanko serif" aria-hidden="true">系</span>
       <p class="eyebrow serif">ご先祖から、あなたへ</p>
       <h1 class="serif">家系圖</h1>
@@ -396,7 +416,7 @@ header.topbar{
       <p>世代ごとに、左右のつり合いまで自動で調整。指でつかんで動かし、なめらかに拡げたり縮めたり。掛軸を眺めるように。</p>
     </section>
 
-    <section class="feat alt seigaiha reveal">
+    <section class="feat sea seigaiha reveal">
       <div class="rule"></div>
       <h2 class="serif">血の道を、<br>姓を超えて。</h2>
       <p>嫁ぎ先で名字が変わっても、養子でも、再婚でも。血のつながりを、そのままていねいに書き継いでいけます。</p>
@@ -408,13 +428,13 @@ header.topbar{
       <p>一本のリンクで分かち合い。受け取ったご家族も、その場で名を連ねられます。</p>
     </section>
 
-    <section class="feat alt seigaiha reveal">
+    <section class="feat sea seigaiha reveal">
       <div class="rule"></div>
       <h2 class="serif">一幅の絵として。</h2>
       <p>雅やかな誌面のしつらえで、ストーリーズ用の画像やPDFに。家の歩みを、一枚に。</p>
     </section>
 
-    <section class="hero reveal" style="min-height:auto;">
+    <section class="hero sea seigaiha reveal" style="min-height:auto;">
       <span class="hanko serif" aria-hidden="true">始</span>
       <h2 class="serif">さあ、はじめましょう。</h2>
       <div class="cta" style="margin-top:10px;">
@@ -583,7 +603,7 @@ header.topbar{
       <div class="step"><div class="num serif">6</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
       <div class="step"><div class="num serif">7</div><div><h3>家族で共有する</h3><p>上の「<b>共有</b>」を押すとリンクができます。家族に送れば、相手も同じ家系図を見て<b>人を追加</b>できます。追加してもらったら、相手に新しい共有リンクを作って送り返してもらえば最新の内容を取り込めます。</p></div></div>
       <div class="step"><div class="num serif">8</div><div><h3>画像やPDFにする</h3><p>右上のメニュー（•••）から「<b>画像・PDFにする</b>」を選ぶと、雑誌のようなデザインで、ストーリーズ用の縦長画像・投稿用の正方形画像・PDFに書き出せます。</p></div></div>
-      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。入力した内容は、この端末の中に自動で保存されます。</div>
+      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。なお、<b>苗字ごとに、その家だけの「家紋」が自動で生成</b>され、カードや一覧、書き出した画像にも入ります。入力した内容は、この端末の中に自動で保存されます。</div>
     </div>
   </div>
 </div>
@@ -709,6 +729,67 @@ function surnameList(){
   const out=[];
   for(const id of state.order){ const s=state.persons[id].last; if(s && !out.includes(s)) out.push(s); }
   return out;
+}
+
+/* =========================================================
+   家紋（苗字ごとにオリジナル生成）
+   苗字をハッシュ→決定的な乱数で、円（丸）の中に放射対称の紋様を構成
+   ========================================================= */
+function hashStr(s){ let h=2166136261>>>0; s=s||""; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function crestParams(name){
+  const r=mulberry32(hashStr("家紋:"+(name||"")));
+  return {
+    k:[3,4,5,6,8][Math.floor(r()*5)],   // 対称数
+    motif:Math.floor(r()*5),            // 紋様の種類
+    dist:20+Math.floor(r()*8),
+    sz:8+Math.floor(r()*5),
+    ring:3+r()*2.2,
+    center:r()<0.62,
+    rot:Math.floor(r()*40),
+    dbl:r()<0.4                          // 二重丸
+  };
+}
+function _motifSVG(p){
+  const cx=50, y=50-p.dist, sz=p.sz, f=n=>n.toFixed(1);
+  switch(p.motif){
+    case 0: return `<ellipse cx="${cx}" cy="${f(y)}" rx="${f(sz*0.55)}" ry="${f(sz*1.15)}"/>`;                                  // 花弁
+    case 1: return `<polygon points="${cx},${f(y-sz)} ${f(cx+sz*0.72)},${f(y)} ${cx},${f(y+sz)} ${f(cx-sz*0.72)},${f(y)}"/>`;   // 菱
+    case 2: return `<circle cx="${cx}" cy="${f(y)}" r="${f(sz*0.62)}"/>`;                                                       // 曜（星）
+    case 3: return `<polygon points="50,50 ${f(cx-sz*0.7)},${f(y)} ${f(cx+sz*0.7)},${f(y)}"/>`;                                 // 鱗（楔）
+    default:return `<path d="M50 ${f(y-sz)} Q ${f(cx+sz)} ${f(y)} 50 ${f(y+sz)} Q ${f(cx-sz*0.4)} ${f(y)} 50 ${f(y-sz)} Z"/>`;  // 木の葉
+  }
+}
+function crestSVG(name){
+  const p=crestParams(name); let g="";
+  for(let i=0;i<p.k;i++) g+=`<g transform="rotate(${(360/p.k*i).toFixed(2)} 50 50)">${_motifSVG(p)}</g>`;
+  let s=`<svg viewBox="0 0 100 100" width="100%" height="100%" fill="currentColor" stroke="none" aria-hidden="true">`;
+  s+=`<circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="${p.ring.toFixed(1)}"/>`;
+  if(p.dbl) s+=`<circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width="${(p.ring*0.5).toFixed(1)}"/>`;
+  s+=`<g transform="rotate(${p.rot} 50 50)">${g}</g>`;
+  if(p.center) s+=`<circle cx="50" cy="50" r="${(p.sz*0.62).toFixed(1)}"/>`;
+  return s+`</svg>`;
+}
+function _motifCanvas(ctx,p){
+  const cx=50, y=50-p.dist, sz=p.sz;
+  ctx.beginPath();
+  if(p.motif===0) ctx.ellipse(cx,y,sz*0.55,sz*1.15,0,0,Math.PI*2);
+  else if(p.motif===1){ ctx.moveTo(cx,y-sz);ctx.lineTo(cx+sz*0.72,y);ctx.lineTo(cx,y+sz);ctx.lineTo(cx-sz*0.72,y);ctx.closePath(); }
+  else if(p.motif===2) ctx.arc(cx,y,sz*0.62,0,Math.PI*2);
+  else if(p.motif===3){ ctx.moveTo(50,50);ctx.lineTo(cx-sz*0.7,y);ctx.lineTo(cx+sz*0.7,y);ctx.closePath(); }
+  else { ctx.moveTo(50,y-sz);ctx.quadraticCurveTo(cx+sz,y,50,y+sz);ctx.quadraticCurveTo(cx-sz*0.4,y,50,y-sz); }
+  ctx.fill();
+}
+function drawCrest(ctx,name,cx,cy,R,color){
+  const p=crestParams(name), s=R/46;
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(s,s); ctx.translate(-50,-50);
+  ctx.fillStyle=color; ctx.strokeStyle=color;
+  ctx.lineWidth=p.ring; ctx.beginPath(); ctx.arc(50,50,46,0,Math.PI*2); ctx.stroke();
+  if(p.dbl){ ctx.lineWidth=p.ring*0.5; ctx.beginPath(); ctx.arc(50,50,41,0,Math.PI*2); ctx.stroke(); }
+  ctx.translate(50,50); ctx.rotate(p.rot*Math.PI/180); ctx.translate(-50,-50);
+  for(let i=0;i<p.k;i++){ ctx.save(); ctx.translate(50,50); ctx.rotate(360/p.k*i*Math.PI/180); ctx.translate(-50,-50); _motifCanvas(ctx,p); ctx.restore(); }
+  if(p.center){ ctx.beginPath(); ctx.arc(50,50,p.sz*0.62,0,Math.PI*2); ctx.fill(); }
+  ctx.restore();
 }
 function link(aId,bId,field){
   const a=state.persons[aId], b=state.persons[bId];
@@ -936,7 +1017,8 @@ function updateFilterBar(){
   bar.classList.add("show");
   const mk=(label,val,extra)=>{
     const b=el("button","chip"+(extra?" "+extra:""));
-    b.textContent=label;
+    if(val){ b.innerHTML='<span class="mon">'+crestSVG(val)+'</span>'; b.appendChild(document.createTextNode(label)); }
+    else b.textContent=label;
     if(val===filterSurname) b.classList.add("active");
     b.addEventListener("click",()=>{ filterSurname=val; render(); fitToScreen(); });
     bar.appendChild(b);
@@ -1016,7 +1098,7 @@ function render(){
     const nm=el("div","nm"); nm.textContent=fullName(p); c.appendChild(nm);
     if(p.yomi){ const y=el("div","yomi"); y.textContent=p.yomi; c.appendChild(y); }
     const meta=el("div","meta"); meta.textContent=lifeShort(p); if(meta.textContent) c.appendChild(meta);
-    if(!p.alive){ const dm=el("div","dec-mark"); dm.textContent="✦"; dm.title="故人"; c.appendChild(dm); }
+    if(p.last){ const mon=el("div","mon"); mon.title=p.last+"家の家紋"; mon.innerHTML=crestSVG(p.last); c.appendChild(mon); }
 
     // quick-add buttons
     const q=el("div","quick");
@@ -1076,8 +1158,10 @@ function openDetail(id){
   const p=state.persons[id]; if(!p) return;
   const g = p.gender;
   let html="";
-  html += `<div class="detail-name serif">${esc(fullName(p))}</div>`;
+  const crest = p.last? `<span class="detail-crest" title="${esc(p.last)}家の家紋">${crestSVG(p.last)}</span>` : "";
+  html += `<div class="detail-head">${crest}<div><div class="detail-name serif">${esc(fullName(p))}</div>`;
   if(p.yomi) html += `<div class="detail-yomi">${esc(p.yomi)}</div>`;
+  html += `</div></div>`;
   html += `<div class="detail-badges">`;
   html += `<span class="badge ${g==="male"?"g-male":g==="female"?"g-female":""}">${g==="male"?"男性":g==="female"?"女性":"その他・不明"}</span>`;
   html += `<span class="badge">${p.alive?"存命":"故人"}</span>`;
@@ -1086,6 +1170,7 @@ function openDetail(id){
   html += `</div>`;
 
   html += `<div class="dl">`;
+  if(p.last) html += item("家紋", "「"+p.last+"」から自動生成");
   if(p.maiden) html += item("旧姓", p.maiden);
   if(p.birth) html += item("生年月日", fmtDate(p.birth));
   if(p.death) html += item("没年月日", fmtDate(p.death));
@@ -1653,10 +1738,12 @@ function drawPoster(ctx,W,H){
   ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=1.4;
   ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
 
-  // masthead title
+  // 家紋（代表的な苗字）を題字の上に押す
   const sur=dominantSurname();
+  if(sur) drawCrest(ctx, sur, cx, y+Math.round(H*0.05), Math.round(W*0.058), POSTER_ACCENT);
+  // masthead title
   const title = sur? sur+"家" : "わたしの家系図";
-  y += Math.round(H*0.085);
+  y += Math.round(H*0.115);
   let ts=Math.round(W*0.135);
   ctx.fillStyle=POSTER_INK;
   do{ ctx.font=`700 ${ts}px 'Shippori Mincho', serif`; ts-=2; }

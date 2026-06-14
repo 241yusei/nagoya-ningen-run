@@ -3,7 +3,8 @@
 入力した情報から、**バランスのよい家系図を自動でつくる**シングルページの Web アプリです。
 インストール不要・依存ライブラリゼロ・単一 HTML ファイルで動きます。
 
-👉 公開URL: `https://241yusei.github.io/nagoya-ningen-run/family-tree/`
+👉 公開URL: `https://241yusei.github.io/<リポジトリ名>/family-tree/`
+（GitHub Pages はリポジトリ名が URL に入ります。例：リポジトリ名が `kakeizu` なら `https://241yusei.github.io/kakeizu/family-tree/`）
 
 ## できること
 

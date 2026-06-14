@@ -164,6 +164,33 @@ header.topbar{
 .legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block;}
 @media(max-width:560px){.legend{display:none;}}
 
+/* ---------- Top stack: sample banner + surname filter ---------- */
+#topstack{position:fixed;left:0;right:0;top:60px;z-index:36;display:flex;flex-direction:column;align-items:center;pointer-events:none;}
+#sampleBanner{display:none;width:100%;background:#3A2A1F;color:#fff;pointer-events:auto;
+  padding:9px 14px;align-items:center;justify-content:center;gap:12px;font-size:14px;box-shadow:var(--shadow);flex-wrap:wrap;}
+#sampleBanner.show{display:flex;}
+#sampleBanner .msg{font-weight:500;}
+#sampleBanner button{font-family:inherit;font-size:13px;font-weight:700;border-radius:999px;cursor:pointer;
+  padding:7px 14px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;line-height:1;}
+#sampleBanner button.solid{background:var(--gold);border-color:var(--gold);color:#1C1B19;}
+#sampleBanner button:hover{opacity:.88;}
+#filterbar{display:none;max-width:calc(100% - 20px);margin-top:10px;pointer-events:auto;
+  background:rgba(251,250,247,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--hair);border-radius:999px;padding:6px;box-shadow:var(--shadow);
+  overflow-x:auto;gap:5px;align-items:center;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+#filterbar.show{display:flex;}
+#filterbar .flabel{font-size:11px;color:var(--faint);font-weight:700;padding:0 4px 0 8px;white-space:nowrap;flex:none;}
+.chip{font-family:inherit;font-size:13.5px;font-weight:600;color:var(--sub);background:transparent;
+  border:1px solid transparent;border-radius:999px;padding:8px 15px;cursor:pointer;white-space:nowrap;transition:.15s;flex:none;}
+.chip:hover{background:#fff;}
+.chip.active{background:var(--ink);color:#fff;}
+.chip.all.active{background:var(--accent);}
+@media(max-width:560px){#filterbar{max-width:calc(100% - 10px);}#filterbar .flabel{display:none;}}
+
+/* death-date toggle field */
+#deathWrap{display:none;}
+#deathWrap.show{display:block;}
+
 /* ---------- Modal / sheet ---------- */
 .overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
   backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
@@ -268,6 +295,15 @@ header.topbar{
   </button>
 </header>
 
+<div id="topstack">
+  <div id="sampleBanner">
+    <span class="msg" id="bannerMsg">サンプルを表示中です。</span>
+    <button class="solid" id="bannerRestore">← 元のデータに戻る</button>
+    <button id="bannerKeep">このまま使う ×</button>
+  </div>
+  <div id="filterbar"><span class="flabel">苗字でしぼり込み</span></div>
+</div>
+
 <div id="stage">
   <div id="canvas">
     <svg id="links"></svg>
@@ -334,18 +370,16 @@ header.topbar{
             <label><input type="radio" name="gender" value="other" checked><span>その他・不明</span></label>
           </div>
         </div>
-        <div class="row2">
-          <div class="field">
-            <label>生年月日 <span class="hint">（任意）</span></label>
-            <input type="date" name="birth" min="1850-01-01">
-          </div>
-          <div class="field">
-            <label>没年月日 <span class="hint">（任意）</span></label>
-            <input type="date" name="death" min="1850-01-01">
-          </div>
+        <div class="field">
+          <label>生年月日 <span class="hint">（任意）</span></label>
+          <input type="date" name="birth" min="1850-01-01">
         </div>
         <div class="field">
-          <label class="check"><input type="checkbox" name="alive" checked> ご存命です（存命中）</label>
+          <label class="check"><input type="checkbox" name="hasdeath" id="hasdeath"> 亡くなっています（没年月日を入力する）</label>
+        </div>
+        <div class="field" id="deathWrap">
+          <label>没年月日 <span class="hint">（わかる範囲で／不明なら空欄でも可）</span></label>
+          <input type="date" name="death" min="1850-01-01">
         </div>
         <div class="field">
           <label>ひとことメモ <span class="hint">（任意）出身地・職業・旧姓など</span></label>
@@ -376,9 +410,10 @@ header.topbar{
       <p class="lead">むずかしい操作はありません。<b>名前を入れていくだけ</b>で、家系図ができあがります。スマホでも、パソコンでも使えます。</p>
       <div class="step"><div class="num serif">1</div><div><h3>最初のひとりを追加します</h3><p>「人を追加」ボタンを押して、ご本人やご先祖など、起点になる方の名前を入れます。生年月日などは、わかる範囲で大丈夫です。</p></div></div>
       <div class="step"><div class="num serif">2</div><div><h3>つながる人を増やします</h3><p>家系図の中の名前に<b>軽くふれる（タップ／クリック）</b>と、その方の詳細が開きます。そこにある「配偶者」「子ども」「親」「きょうだい」のボタンから、関係する人をどんどん足していけます。</p></div></div>
-      <div class="step"><div class="num serif">3</div><div><h3>生年月日・没年を見る</h3><p>名前にふれると、生まれた日や（ご記入があれば）亡くなった日が表示されます。年齢や享年も自動で計算します。</p></div></div>
-      <div class="step"><div class="num serif">4</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
-      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。入力した内容は、この端末の中に自動で保存されます。</div>
+      <div class="step"><div class="num serif">3</div><div><h3>亡くなった方の記録</h3><p>入力画面の「<b>亡くなっています（没年月日を入力する）</b>」にチェックを入れると、没年月日の入力欄があらわれます。わからない場合は空欄のままでもかまいません。名前にふれると、生年月日・没年月日・年齢・享年が表示されます。</p></div></div>
+      <div class="step"><div class="num serif">4</div><div><h3>苗字でしぼり込む</h3><p>画面上の帯にある<b>苗字のボタン</b>で表示を切り替えられます。「<b>全員</b>」は記載した全員、各<b>苗字</b>はその苗字の人と、直接つながりのある親戚だけを表示します。</p></div></div>
+      <div class="step"><div class="num serif">5</div><div><h3>動かす・大きさを変える</h3><p>図は指やマウスで<b>つかんで動かせます</b>。右下の「＋」「－」で大きさを変えられ、「⤢」で全体が画面に収まります。</p></div></div>
+      <div class="tip">💡 <b>ヒント：</b>姓（名字）がちがっても、血のつながりがあれば記録できます。結婚で名字が変わった方、養子・再婚など、いろいろな家族の形をそのまま残せます。「サンプルの家系図を見る」を押しても、上に出る帯の「<b>元のデータに戻る</b>」でいつでも戻せます。入力した内容は、この端末の中に自動で保存されます。</div>
     </div>
   </div>
 </div>
@@ -419,6 +454,8 @@ const STORE_KEY = "kinship.familytree.v1";
 let state = { persons:{}, order:[] };
 let view = { x:60, y:90, k:1 };
 let lastAddedId = null;
+let filterSurname = null;   // null = 大カテゴリー（全員）／文字列 = 中カテゴリー（その苗字＋直接の親戚）
+let backupJSON = null;      // for restoring after sample / clear
 
 /* ---------- helpers ---------- */
 const $ = sel => document.querySelector(sel);
@@ -446,6 +483,27 @@ function addPerson(data){
 }
 function childrenOf(id){
   return state.order.filter(cid => state.persons[cid].parents.includes(id));
+}
+
+/* ---------- visible set for the current category ----------
+   大カテゴリー: filterSurname=null → 全員
+   中カテゴリー: ある苗字の人 ＋ その人と直接つながる親戚（親・子・配偶者）のみ */
+function getVis(){
+  if(!filterSurname) return null;
+  const result=new Set();
+  for(const id of state.order){ if((state.persons[id].last||"")===filterSurname) result.add(id); }
+  for(const id of [...result]){               // 1ホップだけ＝「直接のつながり」
+    const p=state.persons[id];
+    p.parents.forEach(x=>{ if(state.persons[x]) result.add(x); });
+    p.spouses.forEach(x=>{ if(state.persons[x]) result.add(x); });
+    childrenOf(id).forEach(x=>result.add(x));
+  }
+  return result;
+}
+function surnameList(){
+  const out=[];
+  for(const id of state.order){ const s=state.persons[id].last; if(s && !out.includes(s)) out.push(s); }
+  return out;
 }
 function link(aId,bId,field){
   const a=state.persons[aId], b=state.persons[bId];
@@ -502,10 +560,11 @@ function computeGenerations(){
 /* =========================================================
    LAYOUT  (couple-aware tidy tree + collision resolution)
    ========================================================= */
-function buildLayout(){
+function buildLayout(vis){
   const gen = computeGenerations();
   const visited = new Set();
   const units = [];   // all drawing units
+  const inSet = id => !vis || vis.has(id);
 
   function unitWidth(u){ return u.members.length*CARD_W + (u.members.length-1)*COUPLE_GAP; }
 
@@ -516,7 +575,7 @@ function buildLayout(){
     const members=[personId];
     // attach an unvisited spouse at the same generation
     for(const s of p.spouses){
-      if(!visited.has(s) && state.persons[s] && gen[s]===gen[personId]){
+      if(!visited.has(s) && state.persons[s] && inSet(s) && gen[s]===gen[personId]){
         visited.add(s); members.push(s); break;
       }
     }
@@ -526,7 +585,7 @@ function buildLayout(){
     const kidIds = [];
     for(const m of members){
       for(const c of childrenOf(m)){
-        if(!visited.has(c) && !kidIds.includes(c)) kidIds.push(c);
+        if(inSet(c) && !visited.has(c) && !kidIds.includes(c)) kidIds.push(c);
       }
     }
     for(const cid of kidIds){
@@ -536,13 +595,13 @@ function buildLayout(){
     return u;
   }
 
-  // roots: top-most blood ancestors (no parents in dataset), ordered by generation then input
+  // roots: top-most blood ancestors (no parents in the visible set), ordered by generation then input
   const roots=[];
-  const sorted=[...state.order].sort((a,b)=> (gen[a]-gen[b]) || (state.order.indexOf(a)-state.order.indexOf(b)));
+  const sorted=[...state.order].filter(inSet).sort((a,b)=> (gen[a]-gen[b]) || (state.order.indexOf(a)-state.order.indexOf(b)));
   for(const id of sorted){
     if(visited.has(id)) continue;
     const p=state.persons[id];
-    const hasParentInSet = p.parents.some(pp=>state.persons[pp]);
+    const hasParentInSet = p.parents.some(pp=>state.persons[pp] && inSet(pp));
     if(!hasParentInSet) roots.push(buildUnit(id));
   }
   // any leftovers (cycles / orphan spouses) become their own roots
@@ -630,13 +689,34 @@ const stage=$("#stage"), canvas=$("#canvas"), nodes=$("#nodes"), links=$("#links
 
 function genderClass(g){ return g==="male"?"male":g==="female"?"female":""; }
 
+/* surname filter chips（大カテゴリー＝全員／中カテゴリー＝苗字ごと） */
+function updateFilterBar(){
+  const bar=$("#filterbar");
+  const surs=surnameList();
+  bar.querySelectorAll(".chip").forEach(c=>c.remove());
+  if(!state.order.length || surs.length===0){ bar.classList.remove("show"); return; }
+  bar.classList.add("show");
+  const mk=(label,val,extra)=>{
+    const b=el("button","chip"+(extra?" "+extra:""));
+    b.textContent=label;
+    if(val===filterSurname) b.classList.add("active");
+    b.addEventListener("click",()=>{ filterSurname=val; render(); fitToScreen(); });
+    bar.appendChild(b);
+  };
+  mk("全員", null, "all");        // 大カテゴリー（記載された全員）
+  for(const s of surs) mk(s, s);  // 中カテゴリー（その苗字＋直接の親戚）
+}
+
 function render(){
+  // drop a stale surname filter (e.g. after deletion)
+  if(filterSurname && !surnameList().includes(filterSurname)) filterSurname=null;
   const count = state.order.length;
   empty.style.display = count? "none":"flex";
+  updateFilterBar();
   nodes.innerHTML=""; links.innerHTML="";
   if(!count){ return; }
 
-  const L = buildLayout();
+  const L = buildLayout(getVis());
   canvas.style.width=L.width+"px"; canvas.style.height=L.height+"px";
   links.setAttribute("width", L.width); links.setAttribute("height", L.height);
   links.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
@@ -826,6 +906,7 @@ function openForm(mode){
   personForm.reset();
   // default gender → other already checked via reset; ensure
   personForm.gender.value="other";
+  $("#deathWrap").classList.remove("show");   // 没年欄は既定で隠す
   if(formMode.editId){
     const p=state.persons[formMode.editId];
     formTitle.textContent="この人を編集";
@@ -834,7 +915,10 @@ function openForm(mode){
     personForm.last.value=p.last||""; personForm.first.value=p.first||"";
     personForm.yomi.value=p.yomi||""; personForm.gender.value=p.gender||"other";
     personForm.birth.value=p.birth||""; personForm.death.value=p.death||"";
-    personForm.alive.checked=!!p.alive; personForm.note.value=p.note||"";
+    personForm.note.value=p.note||"";
+    const deceased=!p.alive;
+    personForm.hasdeath.checked=deceased;
+    $("#deathWrap").classList.toggle("show", deceased);
   } else if(formMode.relation){
     const t=state.persons[formMode.targetId];
     formTitle.textContent="人を追加";
@@ -853,17 +937,17 @@ function openForm(mode){
 personForm.addEventListener("submit",e=>{
   e.preventDefault();
   const fd=new FormData(personForm);
+  const hasdeath = fd.get("hasdeath")==="on";
   const data={
     last:(fd.get("last")||"").trim(),
     first:(fd.get("first")||"").trim(),
     yomi:(fd.get("yomi")||"").trim(),
     gender:fd.get("gender")||"other",
     birth:fd.get("birth")||"",
-    death:fd.get("death")||"",
-    alive:fd.get("alive")==="on",
+    death:hasdeath ? (fd.get("death")||"") : "",
+    alive:!hasdeath,
     note:(fd.get("note")||"").trim(),
   };
-  if(data.alive) data.death="";
 
   if(formMode.editId){
     Object.assign(state.persons[formMode.editId], data);
@@ -891,6 +975,7 @@ personForm.addEventListener("submit",e=>{
       for(const par of t.parents){ if(state.persons[par]) addParentLink(newId,par); }
     }
   }
+  filterSurname=null;      // 追加した人が必ず見えるよう「全員」に戻す
   lastAddedId=newId;
   save();
   closeOverlay(formOverlay);
@@ -899,6 +984,30 @@ personForm.addEventListener("submit",e=>{
   sparkleAt(newId);
   toast("追加しました ✦");
 });
+
+// 「亡くなっています」をチェックすると没年月日の入力欄を表示
+$("#hasdeath").addEventListener("change",e=>{
+  $("#deathWrap").classList.toggle("show", e.target.checked);
+});
+
+/* =========================================================
+   BACKUP / RESTORE banner（サンプルや消去から元に戻す）
+   ========================================================= */
+function snapshot(){ backupJSON=JSON.stringify(state); try{ localStorage.setItem("kinship.backup",backupJSON); }catch(e){} }
+function showBanner(msg){ $("#bannerMsg").textContent=msg; $("#sampleBanner").classList.add("show"); }
+function hideBanner(){ $("#sampleBanner").classList.remove("show"); }
+function restoreBackup(){
+  if(backupJSON!=null){
+    try{ const d=JSON.parse(backupJSON); state=d; if(!state.order) state.order=Object.keys(d.persons||{}); }
+    catch(e){ state={persons:{},order:[]}; }
+  } else { state={persons:{},order:[]}; }
+  backupJSON=null; try{ localStorage.removeItem("kinship.backup"); }catch(e){}
+  filterSurname=null; save(); render(); if(state.order.length) fitToScreen();
+  hideBanner(); toast("元のデータに戻しました");
+}
+function keepCurrent(){ backupJSON=null; try{ localStorage.removeItem("kinship.backup"); }catch(e){} hideBanner(); toast("このまま使います"); }
+$("#bannerRestore").addEventListener("click",restoreBackup);
+$("#bannerKeep").addEventListener("click",keepCurrent);
 
 /* =========================================================
    OVERLAYS
@@ -979,7 +1088,7 @@ function zoomBy(f){
 }
 function fitToScreen(){
   if(!state.order.length) return;
-  const L=buildLayout();
+  const L=buildLayout(getVis());
   const rect=stage.getBoundingClientRect();
   const k=clampK(Math.min((rect.width-60)/L.width, (rect.height-60)/L.height, 1.4));
   view.k=k;
@@ -990,7 +1099,7 @@ function fitToScreen(){
 
 /* smooth focus on a specific node */
 function focusOnNode(id, gentle){
-  const L=buildLayout(); const r=L.rects[id]; if(!r) return;
+  const L=buildLayout(getVis()); const r=L.rects[id]; if(!r) return;
   const rect=stage.getBoundingClientRect();
   const targetK = gentle? clampK(Math.max(view.k,0.8)) : view.k;
   const tx = rect.width/2 - r.cx*targetK;
@@ -1013,7 +1122,7 @@ function animateView(tx,ty,tk){
 
 /* sparkle burst at a node (called after render) */
 function sparkleAt(id){
-  const L=buildLayout(); const r=L.rects[id]; if(!r) return;
+  const L=buildLayout(getVis()); const r=L.rects[id]; if(!r) return;
   const n=10;
   for(let i=0;i<n;i++){
     const s=el("div","spark");
@@ -1050,8 +1159,11 @@ $("#emptyGuide").addEventListener("click",()=>openOverlay($("#guideOverlay")));
 $("#emptySample").addEventListener("click",loadSample);
 $("#menuSample").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); loadSample(); });
 $("#menuClear").addEventListener("click",()=>{
-  if(confirm("すべてのデータを消去して、まっさらな状態にします。よろしいですか？")){
-    state={persons:{},order:[]}; save(); render(); closeOverlay($("#menuOverlay")); toast("消去しました");
+  if(confirm("すべてのデータを消去して、まっさらな状態にします。よろしいですか？\n（消したあとでも、上のバナーから元に戻せます）")){
+    snapshot();
+    state={persons:{},order:[]}; filterSurname=null;
+    save(); render(); closeOverlay($("#menuOverlay"));
+    showBanner("データを消去しました。"); toast("消去しました");
   }
 });
 $("#menuExport").addEventListener("click",()=>{
@@ -1076,7 +1188,8 @@ $("#importFile").addEventListener("change",e=>{
    SAMPLE family (姓が違っても血のつながりを表現)
    ========================================================= */
 function loadSample(){
-  if(state.order.length && !confirm("いまのデータを置きかえて、サンプルを表示します。よろしいですか？")) return;
+  snapshot();                 // 今のデータを退避（あとで戻せる）
+  filterSurname=null;
   state={persons:{},order:[]};
   const A=addPerson({last:"山田",first:"一郎",yomi:"やまだ いちろう",gender:"male",birth:"1940-03-02",death:"2018-11-20",alive:false,note:"愛知県名古屋市出身。"});
   const B=addPerson({last:"山田",first:"花子",yomi:"やまだ はなこ",gender:"female",birth:"1943-07-15",alive:true,note:"旧姓 佐藤。"});
@@ -1097,7 +1210,9 @@ function loadSample(){
   setSpouses(D,F);
   const I=addPerson({last:"鈴木",first:"陽菜",yomi:"すずき ひな",gender:"female",birth:"2003-08-08",alive:true,note:"姓は鈴木だが、山田家の血を引く孫。"});
   addParentLink(I,D); addParentLink(I,F);
-  save(); render(); fitToScreen(); toast("サンプルを表示しました");
+  save(); render(); fitToScreen();
+  showBanner("サンプルを表示中です。");
+  toast("サンプルを表示しました");
 }
 
 /* =========================================================
@@ -1107,10 +1222,8 @@ load();
 applyView();
 render();
 if(state.order.length){ fitToScreen(); }
-else {
-  // gentle first-run: open guide once
-  if(!localStorage.getItem("kinship.seen")){ /* keep empty hero visible */ }
-}
+// 直前にサンプル／消去をしていたら、戻せるバナーを再表示
+try{ const b=localStorage.getItem("kinship.backup"); if(b!=null){ backupJSON=b; showBanner("以前のデータに戻せます。"); } }catch(e){}
 // expose for debugging
 window.__ft={state, render, loadSample};
 })();

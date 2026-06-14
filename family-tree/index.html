@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<meta name="theme-color" content="#F4F2ED" />
+<meta name="theme-color" content="#ffffff" />
 <title>家系図 — Kinship</title>
 <meta name="description" content="入力した情報から、バランスのよい家系図を自動でつくるサイト。姓が違っても血のつながりを記録できます。" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,67 +11,75 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --bg:#F4F2ED;
-  --paper:#FBFAF7;
-  --surface:#FFFFFF;
-  --ink:#1C1B19;
-  --sub:#6E6A62;
-  --faint:#9A958B;
-  --hair:#E5E1D7;
-  --line:#C7C1B4;
-  --accent:#A6552F;        /* terracotta */
-  --accent-soft:#F0E2D8;
-  --gold:#C9A24B;
-  --male:#5B7B9A;
-  --female:#B07089;
-  --neutral:#8A8678;
-  --shadow:0 1px 2px rgba(28,27,25,.04), 0 8px 24px rgba(28,27,25,.06);
-  --shadow-lg:0 8px 40px rgba(28,27,25,.16);
-  --radius:14px;
-  --ease:cubic-bezier(.22,.61,.36,1);
+  --bg:#ffffff;
+  --bg2:#f5f5f7;
+  --paper:#ffffff;
+  --surface:#ffffff;
+  --ink:#1d1d1f;
+  --sub:#6e6e73;
+  --faint:#86868b;
+  --hair:#d2d2d7;
+  --line:#d2d2d7;
+  --accent:#0071e3;          /* Apple blue */
+  --accent-hover:#0077ed;
+  --accent-soft:#e8f1fd;
+  --gold:#0071e3;            /* accent for the add effect */
+  --male:#0071e3;
+  --female:#e5358c;
+  --neutral:#86868b;
+  --shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.07);
+  --shadow-lg:0 24px 70px rgba(0,0,0,.20);
+  --radius:18px;
+  --ease:cubic-bezier(.32,.72,0,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;height:100%;}
 body{
-  font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
   color:var(--ink);
-  background:
-    radial-gradient(1200px 600px at 70% -10%, #FAF7F1 0%, rgba(250,247,241,0) 60%),
-    var(--bg);
+  background:var(--bg);
   font-size:16px;
-  line-height:1.7;
+  line-height:1.6;
+  letter-spacing:.004em;
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
   overflow:hidden;
 }
-.serif{font-family:"Shippori Mincho",serif;}
+/* headings use the same SF-style stack, tighter & heavier (Apple look) */
+.serif{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-weight:600;letter-spacing:-.01em;}
 
 /* ---------- Top bar ---------- */
 header.topbar{
-  position:fixed;top:0;left:0;right:0;height:60px;z-index:40;
-  display:flex;align-items:center;gap:14px;padding:0 18px;
-  background:rgba(244,242,237,.82);
-  backdrop-filter:saturate(140%) blur(14px);
-  -webkit-backdrop-filter:saturate(140%) blur(14px);
-  border-bottom:1px solid var(--hair);
+  position:fixed;top:0;left:0;right:0;height:52px;z-index:40;
+  display:flex;align-items:center;gap:10px;padding:0 18px;
+  background:rgba(255,255,255,.72);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.08);
 }
 .brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
-.brand .mark{font-family:"Shippori Mincho",serif;font-weight:700;font-size:22px;letter-spacing:.06em;}
-.brand .sub{font-size:11px;letter-spacing:.32em;color:var(--faint);text-transform:uppercase;}
+.brand .mark{font-weight:600;font-size:19px;letter-spacing:-.01em;}
+.brand .sub{font-size:11px;letter-spacing:.06em;color:var(--faint);}
 .spacer{flex:1;}
 .btn{
   font-family:inherit;font-size:14px;font-weight:500;color:var(--ink);
   border:1px solid var(--line);background:var(--surface);
-  border-radius:999px;padding:9px 16px;cursor:pointer;
+  border-radius:980px;padding:8px 16px;cursor:pointer;
   display:inline-flex;align-items:center;gap:7px;line-height:1;
-  transition:transform .15s var(--ease), box-shadow .2s var(--ease), background .2s;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s, opacity .2s;
   white-space:nowrap;
 }
-.btn:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
-.btn:active{transform:translateY(0);}
+.btn:hover{box-shadow:var(--shadow);}
+.btn:active{transform:scale(.96);}
 .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
 .btn.accent{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:0 6px 18px rgba(0,113,227,.32);}
 .btn.ghost{background:transparent;border-color:transparent;}
-.btn.icon{padding:9px;width:40px;height:40px;justify-content:center;}
+.btn.big{font-size:18px;font-weight:500;padding:13px 28px;}
+.btn.link{background:transparent;border-color:transparent;color:var(--accent);padding:8px 8px;}
+.btn.link:hover{box-shadow:none;color:var(--accent-hover);text-decoration:underline;text-underline-offset:3px;}
+.btn.link:active{transform:none;}
+.btn.icon{padding:9px;width:38px;height:38px;justify-content:center;}
 .btn svg{width:18px;height:18px;display:block;}
 .btn .lbl-sm{display:inline;}
 @media(max-width:680px){
@@ -82,10 +90,10 @@ header.topbar{
 
 /* ---------- Stage / canvas ---------- */
 #stage{
-  position:fixed;inset:60px 0 0 0;overflow:hidden;cursor:grab;touch-action:none;
-  background-image:
-    radial-gradient(var(--hair) .8px, transparent .8px);
-  background-size:26px 26px;
+  position:fixed;inset:52px 0 0 0;overflow:hidden;cursor:grab;touch-action:none;
+  background-color:#fbfbfd;
+  background-image:radial-gradient(var(--hair) .7px, transparent .7px);
+  background-size:28px 28px;
   background-position:center;
 }
 #stage.grabbing{cursor:grabbing;}
@@ -113,7 +121,7 @@ header.topbar{
 .card.male::before{background:var(--male);}
 .card.female::before{background:var(--female);}
 .card.deceased{background:linear-gradient(0deg,#FBFAF7,#fff);}
-.card .nm{font-family:"Shippori Mincho",serif;font-weight:600;font-size:16px;line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .nm{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-weight:600;font-size:16px;line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card .yomi{font-size:10.5px;color:var(--faint);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card .meta{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card .rel{position:absolute;top:7px;right:9px;font-size:9.5px;color:var(--faint);letter-spacing:.04em;}
@@ -135,8 +143,8 @@ header.topbar{
   100%{opacity:1;transform:translateY(0) scale(1);}
 }
 .card.enter::after{content:"";position:absolute;inset:-3px;border-radius:18px;
-  box-shadow:0 0 0 0 rgba(201,162,75,.55);animation:halo 1.1s .15s var(--ease) forwards;pointer-events:none;}
-@keyframes halo{0%{box-shadow:0 0 0 0 rgba(201,162,75,.6);}100%{box-shadow:0 0 0 22px rgba(201,162,75,0);}}
+  box-shadow:0 0 0 0 rgba(0,113,227,.5);animation:halo 1.1s .15s var(--ease) forwards;pointer-events:none;}
+@keyframes halo{0%{box-shadow:0 0 0 0 rgba(0,113,227,.55);}100%{box-shadow:0 0 0 22px rgba(0,113,227,0);}}
 
 /* sparkle burst */
 .spark{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);
@@ -144,47 +152,58 @@ header.topbar{
 .spark.go{animation:spark .85s var(--ease) forwards;}
 @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2);}}
 
-/* ---------- Empty state ---------- */
-#empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;}
-#empty .box{max-width:440px;text-align:center;background:var(--paper);border:1px solid var(--hair);
-  border-radius:22px;padding:40px 34px;box-shadow:var(--shadow);}
-#empty h1{font-family:"Shippori Mincho",serif;font-size:30px;font-weight:700;margin:6px 0 2px;letter-spacing:.04em;}
-#empty .en{font-size:11px;letter-spacing:.36em;color:var(--faint);text-transform:uppercase;}
-#empty p{color:var(--sub);font-size:15px;margin:14px 0 24px;}
-#empty .acts{display:flex;flex-direction:column;gap:10px;}
-#empty .btn{justify-content:center;font-size:16px;padding:14px;}
+/* ---------- Empty state: Apple-style landing ---------- */
+#empty{position:absolute;inset:0;display:block;overflow-y:auto;overflow-x:hidden;background:#fff;
+  touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
+#empty section{padding:13vh 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+#empty .hero{min-height:calc(100dvh - 52px);}
+#empty .feat.alt{background:var(--bg2);}
+#empty .eyebrow{color:var(--accent);font-weight:600;font-size:clamp(17px,2vw,21px);margin:0 0 12px;letter-spacing:0;}
+#empty h1{font-size:clamp(44px,9vw,88px);line-height:1.04;font-weight:700;letter-spacing:-.025em;margin:0 0 22px;color:var(--ink);}
+#empty h2{font-size:clamp(30px,6vw,56px);line-height:1.07;font-weight:700;letter-spacing:-.022em;margin:0 0 18px;color:var(--ink);}
+#empty .lede{font-size:clamp(18px,2.5vw,26px);color:var(--sub);max-width:620px;margin:0 auto 32px;line-height:1.45;font-weight:400;}
+#empty .feat p{font-size:clamp(16px,2.1vw,22px);color:var(--sub);max-width:580px;margin:0 auto;line-height:1.55;}
+#empty .cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;}
+#empty .foot{text-align:center;color:var(--faint);font-size:13px;padding:26px 24px 56px;margin:0;}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 1s var(--ease),transform 1s var(--ease);}
+.reveal.in{opacity:1;transform:none;}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
 
 /* ---------- Zoom controls ---------- */
 .zoomctl{position:fixed;right:16px;bottom:18px;z-index:35;display:flex;flex-direction:column;gap:8px;}
 .zoomctl .btn{width:44px;height:44px;justify-content:center;padding:0;font-size:20px;background:var(--surface);}
-.legend{position:fixed;left:16px;bottom:18px;z-index:35;background:rgba(251,250,247,.9);
-  backdrop-filter:blur(8px);border:1px solid var(--hair);border-radius:12px;padding:10px 13px;
-  font-size:11.5px;color:var(--sub);display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);}
+.legend{position:fixed;left:16px;bottom:18px;z-index:35;background:rgba(255,255,255,.8);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:10px 13px;
+  font-size:11.5px;color:var(--sub);display:flex;gap:14px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,.08);}
 .legend .dot{display:inline-flex;align-items:center;gap:5px;}
 .legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block;}
 @media(max-width:560px){.legend{display:none;}}
 
 /* ---------- Top stack: sample banner + surname filter ---------- */
-#topstack{position:fixed;left:0;right:0;top:60px;z-index:36;display:flex;flex-direction:column;align-items:center;pointer-events:none;}
-#sampleBanner{display:none;width:100%;background:#3A2A1F;color:#fff;pointer-events:auto;
-  padding:9px 14px;align-items:center;justify-content:center;gap:12px;font-size:14px;box-shadow:var(--shadow);flex-wrap:wrap;}
+#topstack{position:fixed;left:0;right:0;top:52px;z-index:36;display:flex;flex-direction:column;align-items:center;pointer-events:none;}
+#sampleBanner{display:none;width:100%;background:rgba(29,29,31,.92);color:#fff;pointer-events:auto;
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  padding:10px 16px;align-items:center;justify-content:center;gap:12px;font-size:14px;flex-wrap:wrap;}
 #sampleBanner.show{display:flex;}
-#sampleBanner .msg{font-weight:500;}
-#sampleBanner button{font-family:inherit;font-size:13px;font-weight:700;border-radius:999px;cursor:pointer;
-  padding:7px 14px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;line-height:1;}
-#sampleBanner button.solid{background:var(--gold);border-color:var(--gold);color:#1C1B19;}
-#sampleBanner button:hover{opacity:.88;}
+#sampleBanner .msg{font-weight:400;}
+#sampleBanner button{font-family:inherit;font-size:13px;font-weight:500;border-radius:980px;cursor:pointer;
+  padding:7px 16px;border:1px solid rgba(255,255,255,.32);background:transparent;color:#fff;line-height:1;transition:.2s var(--ease);}
+#sampleBanner button.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+#sampleBanner button.solid:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+#sampleBanner button:active{transform:scale(.96);}
 #filterbar{display:none;max-width:calc(100% - 20px);margin-top:10px;pointer-events:auto;
-  background:rgba(251,250,247,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid var(--hair);border-radius:999px;padding:6px;box-shadow:var(--shadow);
-  overflow-x:auto;gap:5px;align-items:center;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  background:rgba(245,245,247,.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid rgba(0,0,0,.06);border-radius:980px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.08);
+  overflow-x:auto;gap:3px;align-items:center;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#filterbar::-webkit-scrollbar{display:none;}
 #filterbar.show{display:flex;}
-#filterbar .flabel{font-size:11px;color:var(--faint);font-weight:700;padding:0 4px 0 8px;white-space:nowrap;flex:none;}
-.chip{font-family:inherit;font-size:13.5px;font-weight:600;color:var(--sub);background:transparent;
-  border:1px solid transparent;border-radius:999px;padding:8px 15px;cursor:pointer;white-space:nowrap;transition:.15s;flex:none;}
-.chip:hover{background:#fff;}
-.chip.active{background:var(--ink);color:#fff;}
-.chip.all.active{background:var(--accent);}
+#filterbar .flabel{font-size:11px;color:var(--faint);font-weight:600;padding:0 6px 0 10px;white-space:nowrap;flex:none;}
+.chip{font-family:inherit;font-size:13.5px;font-weight:500;color:var(--ink);background:transparent;
+  border:none;border-radius:980px;padding:8px 16px;cursor:pointer;white-space:nowrap;transition:.25s var(--ease);flex:none;}
+.chip:active{transform:scale(.95);}
+.chip.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14),0 0 1px rgba(0,0,0,.08);font-weight:600;}
+.chip.all.active{color:var(--accent);}
 @media(max-width:560px){#filterbar{max-width:calc(100% - 10px);}#filterbar .flabel{display:none;}}
 
 /* share + export */
@@ -205,21 +224,21 @@ header.topbar{
 .dual{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media(max-width:520px){.dual{grid-template-columns:1fr;}}
 .dual fieldset{border:1px solid var(--hair);border-radius:14px;padding:14px 14px 2px;margin:0;min-width:0;}
-.dual legend{font-family:"Shippori Mincho",serif;font-weight:700;font-size:15px;padding:0 8px;color:var(--accent);}
+.dual legend{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-weight:700;font-size:15px;padding:0 8px;color:var(--accent);}
 .dual .field{margin-bottom:12px;}
 
 /* ---------- Modal / sheet ---------- */
-.overlay{position:fixed;inset:0;z-index:50;background:rgba(28,27,25,.32);
-  backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;
-  opacity:0;pointer-events:none;transition:opacity .25s var(--ease);}
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;
+  opacity:0;pointer-events:none;transition:opacity .35s var(--ease);}
 .overlay.open{opacity:1;pointer-events:auto;}
-.sheet{background:var(--paper);border-radius:20px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;
-  max-height:calc(100dvh - 32px);overflow:auto;transform:translateY(14px) scale(.98);
-  transition:transform .3s var(--ease);}
+.sheet{background:var(--paper);border-radius:24px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;
+  max-height:calc(100dvh - 32px);overflow:auto;transform:translateY(20px) scale(.97);
+  transition:transform .4s var(--ease);}
 .overlay.open .sheet{transform:none;}
 .sheet .hd{position:sticky;top:0;background:var(--paper);padding:20px 24px 12px;border-bottom:1px solid var(--hair);
   display:flex;align-items:center;justify-content:space-between;z-index:1;}
-.sheet .hd h2{font-family:"Shippori Mincho",serif;font-size:20px;font-weight:600;margin:0;letter-spacing:.03em;}
+.sheet .hd h2{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-size:20px;font-weight:600;margin:0;letter-spacing:.03em;}
 .sheet .bd{padding:20px 24px 26px;}
 .x{border:none;background:var(--surface);border:1px solid var(--hair);width:36px;height:36px;border-radius:50%;
   cursor:pointer;font-size:18px;color:var(--sub);line-height:1;}
@@ -251,7 +270,7 @@ header.topbar{
 .relctx b{color:var(--accent);}
 
 /* detail */
-.detail-name{font-family:"Shippori Mincho",serif;font-size:30px;font-weight:700;letter-spacing:.03em;line-height:1.2;}
+.detail-name{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-size:30px;font-weight:700;letter-spacing:.03em;line-height:1.2;}
 .detail-yomi{font-size:13px;color:var(--faint);letter-spacing:.08em;margin-top:2px;}
 .detail-badges{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px;}
 .badge{font-size:12px;padding:5px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--hair);color:var(--sub);}
@@ -274,7 +293,7 @@ header.topbar{
 /* guide */
 .guide .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--hair);}
 .guide .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-family:"Shippori Mincho",serif;}
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;}
 .guide .step h3{margin:0 0 3px;font-size:16px;}
 .guide .step p{margin:0;font-size:14px;color:var(--sub);}
 .guide .lead{font-size:15px;color:var(--sub);margin:0 0 14px;}
@@ -331,21 +350,47 @@ header.topbar{
     <div id="nodes"></div>
   </div>
 
-  <!-- empty state -->
+  <!-- empty state: Apple-style landing -->
   <div id="empty">
-    <div class="box">
-      <div class="en">Family Tree</div>
-      <h1 class="serif">家系図をつくる</h1>
-      <p>名前を入れていくだけで、つながりの美しい家系図が自動でできあがります。<br>姓がちがっても、血のつながりがあれば記録できます。</p>
-      <div class="acts">
-        <button class="btn accent" id="emptyStart">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          最初のひとりを追加する
-        </button>
-        <button class="btn" id="emptySample">サンプルの家系図を見る</button>
-        <button class="btn ghost" id="emptyGuide">はじめての方へ（使い方）</button>
+    <section class="hero reveal">
+      <p class="eyebrow">Kinship</p>
+      <h1 class="serif">家系図を、<br>美しく。</h1>
+      <p class="lede">名前を入れていくだけ。つながりの整った家系図が、自動でできあがります。</p>
+      <div class="cta">
+        <button class="btn accent big" id="emptyStart">はじめる</button>
+        <button class="btn link big" id="emptySample">サンプルを見る ›</button>
       </div>
-    </div>
+      <button class="btn link" id="emptyGuide" style="margin-top:6px;">はじめての方へ（使い方）</button>
+    </section>
+
+    <section class="feat reveal">
+      <h2 class="serif">美しく、<br>自動で整列。</h2>
+      <p>世代ごとに、左右のバランスまで自動で調整。指でつかんで動かし、なめらかに拡大・縮小できます。</p>
+    </section>
+
+    <section class="feat alt reveal">
+      <h2 class="serif">血のつながりを、<br>姓を超えて。</h2>
+      <p>結婚で名字が変わっても、養子や再婚でも。血のつながりを、そのままていねいに残せます。</p>
+    </section>
+
+    <section class="feat reveal">
+      <h2 class="serif">家族みんなで。</h2>
+      <p>リンクひとつで共有。受け取ったご家族も、その場で人を追加できます。</p>
+    </section>
+
+    <section class="feat alt reveal">
+      <h2 class="serif">思い出を、一枚に。</h2>
+      <p>海外の雑誌のようなデザインで、ストーリーズ用の画像やPDFに書き出せます。</p>
+    </section>
+
+    <section class="hero reveal" style="min-height:auto;">
+      <h2 class="serif">さあ、はじめましょう。</h2>
+      <div class="cta" style="margin-top:8px;">
+        <button class="btn accent big" data-action="start">最初のひとりを追加</button>
+        <button class="btn link big" data-action="sample">サンプルを見る ›</button>
+      </div>
+    </section>
+    <p class="foot">入力した内容は、この端末の中に自動で保存されます · Kinship</p>
   </div>
 </div>
 
@@ -872,10 +917,10 @@ function render(){
   // drop a stale surname filter (e.g. after deletion)
   if(filterSurname && !surnameList().includes(filterSurname)) filterSurname=null;
   const count = state.order.length;
-  empty.style.display = count? "none":"flex";
+  empty.style.display = count? "none":"block";
   updateFilterBar();
   nodes.innerHTML=""; links.innerHTML="";
-  if(!count){ return; }
+  if(!count){ initReveal(); return; }
 
   const L = buildLayout(getVis());
   canvas.style.width=L.width+"px"; canvas.style.height=L.height+"px";
@@ -1373,6 +1418,21 @@ $("#btnAdd").addEventListener("click",()=>{
 $("#emptyStart").addEventListener("click",()=>openForm({}));
 $("#emptyGuide").addEventListener("click",()=>openOverlay($("#guideOverlay")));
 $("#emptySample").addEventListener("click",loadSample);
+document.querySelectorAll('#empty [data-action]').forEach(b=>{
+  const a=b.dataset.action;
+  b.addEventListener("click",()=>{ if(a==="start") openForm({}); else if(a==="sample") loadSample(); else if(a==="guide") openOverlay($("#guideOverlay")); });
+});
+// don't let the landing page's scroll trigger canvas dragging
+empty.addEventListener("pointerdown",e=>e.stopPropagation());
+// Apple-style scroll reveal for the landing sections
+let _io=null;
+function initReveal(){
+  const els=document.querySelectorAll("#empty .reveal");
+  if(!("IntersectionObserver" in window)){ els.forEach(e=>e.classList.add("in")); return; }
+  if(_io) _io.disconnect();
+  _io=new IntersectionObserver(ents=>{ ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); _io.unobserve(en.target); } }); },{threshold:.15,rootMargin:"0px 0px -8% 0px"});
+  els.forEach(e=>{ e.classList.remove("in"); _io.observe(e); });
+}
 $("#menuSample").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); loadSample(); });
 $("#menuClear").addEventListener("click",()=>{
   if(confirm("すべてのデータを消去して、まっさらな状態にします。よろしいですか？\n（消したあとでも、上のバナーから元に戻せます）")){

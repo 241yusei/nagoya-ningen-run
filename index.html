@@ -535,9 +535,126 @@ function loco(o){
     nF:{x:6,y:0,a:0.05}, fF:{x:-6,y:0,a:0.05},
     nA:{sh:0.06,el:0.5}, fA:{sh:-0.04,el:0.5}};
 }
-// ===== 本物の3Dランサイクル（実レンダー連番スプライト） =====
+// ===== 手描きピクセルランナー（ドット単位のパーツ＋手作りアニメ） =====
+const PIXPAL={
+  base:{hair:'#27272e',hair2:'#171a22',skin:'#e6a37e',skin2:'#c87f5b',eye:'#15151b',top:'#34426a',top2:'#26314f',leg:'#5d7aa8',leg2:'#46618c',shoe:'#3f6ea8',sole:'#eceef2'},
+  suit:{hair:'#27272e',hair2:'#171a22',skin:'#e6a37e',skin2:'#c87f5b',eye:'#15151b',top:'#3b3e47',top2:'#2b2d35',leg:'#3b3e47',leg2:'#2b2d35',shoe:'#191920',sole:'#191920',shirt:'#f1f1ec',tie:'#2b3d68'},
+  black:{hair:'#16161d',hair2:'#0d0d12',skin:'#262630',skin2:'#16161d',eye:'#f2f2f2',top:'#1b1b23',top2:'#101015',leg:'#1b1b23',leg2:'#101015',shoe:'#0c0c10',sole:'#2a2a33'},
+  gold:{hair:'#b5872a',hair2:'#8a6620',skin:'#ecc55c',skin2:'#c79a36',eye:'#3a2c0a',top:'#dcab3c',top2:'#b5872a',leg:'#dcab3c',leg2:'#b5872a',shoe:'#8a6620',sole:'#f3d77f'},
+};
+// ドット単位の矩形（U=1ドット）。原点はキャラ中心・足元(y=0)、上が負。
+function pxRunner(c,o){
+  const U=PIXEL, P=PIXPAL[CHAR_CW[o.char]||'base'];
+  const R=(col,dx,dy,dw,dh)=>{ c.fillStyle=col; c.fillRect(Math.round(dx)*U,Math.round(dy)*U,Math.round(dw)*U,Math.round(dh)*U); };
+  // ブロックの太い線（脚・腕）
+  const seg=(col,x0,y0,x1,y1,th)=>{
+    const n=Math.max(1,Math.round(Math.max(Math.abs(x1-x0),Math.abs(y1-y0))));
+    c.fillStyle=col; const h=th>>1;
+    for(let i=0;i<=n;i++){ const x=Math.round(x0+(x1-x0)*i/n)-h, y=Math.round(y0+(y1-y0)*i/n)-h; c.fillRect(x*U,y*U,th*U,th*U); }
+  };
+  const st=o.state, p=o.phase||0, vy=o.vy01||0;
+  // ---- ポーズ決定 ----
+  let nSw,fSw,naSw,faSw,bodyY=0,legStraight=0;
+  if(st==='run'){ nSw=Math.sin(p); fSw=Math.sin(p+Math.PI); naSw=Math.sin(p+Math.PI); faSw=Math.sin(p); bodyY=-Math.abs(Math.cos(p)); }
+  else if(st==='jump'){ const up=vy>=0; nSw=up?0.9:-0.2; fSw=up?0.3:-0.7; naSw=-1; faSw=-0.5; }
+  else if(st==='slide'){ legStraight=1; }
+  else { nSw=0.1; fSw=-0.1; naSw=-0.1; faSw=0.1; }   // idle
+  // ジョイント（ドット）。中心x=0、足元y=0。頭大きめのチビ体型。
+  const hipY=-14, shY=-28;
+  function leg(sw,col){
+    if(legStraight){ seg(col,0,hipY,10,-2,4); R(col,9,-4,5,3); R(P.sole,9,-2,5,1.4); return; }
+    const footX=Math.round(sw*6), lift=Math.max(0,-sw)*5;
+    const foot={x:footX,y:-lift};
+    const knee={x:Math.round(footX*0.5)+1, y:Math.round(hipY/2 - lift*0.3)};
+    seg(col,0,hipY,knee.x,knee.y,4);            // 腿
+    seg(col,knee.x,knee.y,foot.x,foot.y,4);     // すね
+    R(P.shoe,foot.x-1.5,foot.y-2,6,3);          // 靴（つま先は前へ）
+    R(P.sole,foot.x-1.5,foot.y+0.4,6,1.4);      // 靴底
+  }
+  function arm(sw,col,shX){
+    if(legStraight){ seg(col,2,shY+2,11,shY+6,3); R(P.skin,11,shY+5,3,3); return; }
+    const handX=Math.round(sw*6), hy=shY+11;
+    const elbow={x:Math.round(sw*4)+shX, y:shY+6};
+    seg(col,shX,shY+1,elbow.x,elbow.y,3);
+    seg(col,elbow.x,elbow.y,handX+shX,hy,3);
+    R(P.skin,handX+shX-1,hy-1,3,3);             // 手
+  }
+  c.save();
+  c.translate(0,Math.round(bodyY)*U);
+  // 奥側の腕・脚（暗め）
+  arm(faSw,P.top2,-2);
+  leg(fSw,P.leg2);
+  // 胴（ジャケット/セーター）
+  R(P.top, -6, -29, 12, 15);             // 胴本体
+  R(P.top2, -6, -29, 3, 15);             // 左影
+  R(P.top2, -6, -16, 12, 2);             // 裾影
+  if(P.shirt){ R(P.shirt, -1, -29, 4, 7); R(P.tie, 0, -28, 2, 9); }  // スーツ
+  // 近側の脚（明るい）
+  leg(nSw,P.leg);
+  // 首・頭（大きめ）
+  R(P.skin2, -1, -31, 4, 3);                     // 首
+  R(P.hair2, -6, -45, 13, 7);                    // 髪トップ
+  R(P.hair2, -6, -45, 3, 13);                    // 髪うしろ
+  R(P.skin,  -2, -40, 8, 11);                    // 顔
+  R(P.skin2, -2, -31, 8, 2);                     // 顎影
+  R(P.hair,  -2, -42, 8, 3);                     // 前髪
+  R(P.hair,  5, -41, 2, 5);                      // もみあげ
+  R(P.eye, 1, -38, 6, 2);                        // メガネ
+  R(P.eye, 0, -38, 1, 1);                        // つる
+  if(o.char==='black'){ R('#f2f2f2', 3, -38, 2, 2); }
+  // 近側の腕（最前・明るい）
+  arm(naSw,P.top,2);
+  c.restore();
+}
 function drawRunner(c,x,gy,o){
   const cw=CHAR_CW[o.char]||'base';
+  // --- 手描きピクセル版 ---
+  {
+    c.save();
+    c.translate(x,gy);
+    if(o.scale)c.scale(o.scale,o.scale);
+    if(o.flash!==undefined)c.globalAlpha=o.flash;
+    // 接地影（ドット楕円）
+    if(o.shadow!==false){
+      const surf=o.shadowSurf||0, air=clamp(((o.airY||0)-surf)/170,0,1);
+      c.globalAlpha=(o.flash!==undefined?o.flash:1)*0.22*(1-air*0.6);
+      c.fillStyle='#000';
+      const sw=qpx(34*(1-air*0.4));
+      c.fillRect(-sw/2,-2-surf-2,sw,PIXEL*2);
+      c.globalAlpha=(o.flash!==undefined?o.flash:1);
+    }
+    let extraY=0;
+    if(o.state==='slide')extraY=-RUN_H*0.30;
+    c.translate(0,-(o.airY||0)+extraY);
+    if(o.squash){ c.scale(o.squash.x,o.squash.y); }
+    const pivY=-RUN_H*0.4;
+    if(o.spin){ c.translate(0,pivY);c.rotate(o.spin*TAU);c.translate(0,-pivY); }
+    if(o.rot){ c.translate(0,pivY);c.rotate(o.rot);c.translate(0,-pivY); }
+    if(o.state==='slide'){ c.rotate(-1.2); }
+    // ランドセル（胴の後ろ）
+    if(o.char==='randoseru'){
+      const U=PIXEL;
+      c.fillStyle='#2f6fd6'; c.fillRect(-9*U,-30*U,5*U,15*U);
+      c.fillStyle='#1d4ea3'; c.fillRect(-9*U,-30*U,5*U,3*U);
+      c.fillStyle='#d8d8dc'; c.fillRect(-8*U,-24*U,3*U,3*U);
+    }
+    pxRunner(c,o);
+    // 頭アクセサリー
+    const U=PIXEL;
+    if(o.char==='earphone'){
+      c.fillStyle='#f5f5f5';
+      c.fillRect(3*U,-41*U,1*U,1*U);
+      c.fillRect(3*U,-39*U,1*U,4*U);
+      c.fillRect(2*U,-35*U,1*U,5*U);
+    }else if(o.char==='headphone'){
+      c.fillStyle='#7d828c';
+      c.fillRect(-1*U,-50*U,8*U,1*U);          // バンド
+      c.fillStyle='#4a4e56'; c.fillRect(5*U,-47*U,3*U,5*U);  // 右イヤーカップ
+      c.fillStyle='#2e3138'; c.fillRect(6*U,-46*U,2*U,3*U);
+    }
+    c.restore();
+    return;
+  }
   const sheet=RUNS[cw];
   if(!sheet){ drawRunnerRig(c,x,gy,o); return; }   // 連番未ロード→リグ
   const M=RUN_META, sc=RUN_SC*(o.scale||1);
@@ -2689,14 +2806,7 @@ function drawCharsel(c){
     c.save(); rr(c,x+7,y+7,cw-14,chh-38,10); c.clip();
     c.fillStyle=CHAR_FALLBACK_BG[ch.id]||'#eee';
     c.fillRect(x+7,y+7,cw-14,chh-38);
-    const im=IMG[ch.id];
-    if(im){
-      const s=(chh-38)/(im.height*0.86);
-      const dw=im.width*s, dh=im.height*s;
-      c.drawImage(im, x+cw/2-dw/2, y+9-dh*0.05, dw, dh);
-    }else{
-      drawRunner(c,x+cw/2,y+chh-36,{char:ch.id,state:'idle',t:G.t,shadow:false});
-    }
+    drawRunner(c,x+cw/2,y+chh-42,{char:ch.id,state:'run',phase:G.t*7+i,t:G.t,scale:0.66,shadow:false});
     if(locked){
       c.fillStyle='rgba(30,30,34,0.82)';c.fillRect(x+7,y+7,cw-14,chh-38);
       c.fillStyle='#f0c93c';c.font='900 34px '+TXT_FONT;c.textAlign='center';

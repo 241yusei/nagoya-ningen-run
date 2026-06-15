@@ -15,28 +15,29 @@
 <meta name="apple-mobile-web-app-title" content="いえつなぎ" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --bg:#E8E1D2;             /* ベージュ（Actuel基調） */
-  --bg2:#E0D8C6;
-  --paper:#F3EEE3;          /* カード・シート */
-  --surface:#F7F3EA;
-  --ink:#16140F;            /* 黒 */
-  --sub:#57534A;
-  --faint:#8C8678;
-  --hair:#D3CBB9;
-  --line:#2A2620;           /* 連絡線（黒に近い） */
-  --accent:#16140F;         /* モノトーン基調（黒をアクセントに） */
-  --accent-hover:#3a352c;
-  --accent-soft:#E3DCCC;
-  --gold:#9B7B3B;           /* 追加演出の差し色（控えめ） */
-  --male:#5E6B74;           /* 男性（くすみ） */
-  --female:#9A7A82;         /* 女性（くすみ） */
-  --neutral:#8C8678;
-  --shadow:0 1px 2px rgba(30,24,12,.04), 0 8px 24px rgba(30,24,12,.07);
-  --shadow-lg:0 30px 80px rgba(30,24,12,.18);
-  --radius:10px;
+  --bg:#FAF9F5;             /* Anthropic ivory */
+  --bg2:#F0EEE6;
+  --paper:#FFFFFF;
+  --surface:#FCFBF8;
+  --ink:#141413;            /* near-black */
+  --sub:#6B6A62;
+  --faint:#A8A69C;
+  --hair:#E5E2D7;
+  --line:#2A2926;           /* 連絡線 */
+  --accent:#D97757;         /* Anthropic clay（クレイ） */
+  --accent-hover:#C4623F;
+  --accent-soft:#F4E7DF;
+  --gold:#C4623F;           /* 追加演出の差し色 */
+  --slate:#6A9BCC;          /* 補助（青） */
+  --male:#6A9BCC;
+  --female:#BC8AA0;
+  --neutral:#A8A69C;
+  --shadow:0 1px 2px rgba(20,20,19,.04), 0 8px 26px rgba(20,20,19,.06);
+  --shadow-lg:0 30px 80px rgba(20,20,19,.16);
+  --radius:12px;
   --ease:cubic-bezier(.22,.61,.36,1);
   --sei:#e0d4b6;
   --cloud:none; --wave:none;
@@ -55,7 +56,8 @@ body{
   overflow:hidden;
 }
 /* 見出し・氏名は明朝で「日本古来」の趣に */
-.serif{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:600;letter-spacing:.04em;}
+.serif{font-family:"Noto Serif JP",Georgia,"Times New Roman","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:600;letter-spacing:.02em;}
+.sans{font-family:"Noto Sans JP","Helvetica Neue",Arial,sans-serif;}
 .tate{writing-mode:vertical-rl;text-orientation:upright;}
 
 /* ---------- Top bar ---------- */
@@ -82,8 +84,8 @@ header.topbar{
 .btn:hover{box-shadow:var(--shadow);border-color:var(--line);}
 .btn:active{transform:scale(.97);}
 .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);}
-.btn.accent{background:var(--ink);color:var(--bg);border-color:var(--ink);}
-.btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:var(--shadow);}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:0 6px 18px rgba(217,119,87,.3);}
 .btn.ghost{background:transparent;border-color:transparent;}
 .btn.big{font-size:17px;font-weight:500;padding:15px 34px;border-radius:999px;letter-spacing:.04em;}
 /* テキストリンク：下線がスッと伸びる（Actuel風） */
@@ -116,9 +118,9 @@ header.topbar{
 
 /* connectors（黒に近い線・モノトーン） */
 .link-path{fill:none;stroke:var(--line);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
-.link-path.marriage{stroke:var(--ink);stroke-width:1.8;}
+.link-path.marriage{stroke:var(--accent);stroke-width:2;}
 .link-path.adopt{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 5;}
-.link-ring{fill:var(--bg);stroke:var(--ink);stroke-width:1.6;}
+.link-ring{fill:var(--bg);stroke:var(--accent);stroke-width:1.8;}
 .link-path.enter{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .7s .05s var(--ease) forwards;}
 @keyframes draw{to{stroke-dashoffset:0;}}
 
@@ -194,11 +196,13 @@ header.topbar{
 #empty .wrap{max-width:1080px;margin:0 auto;width:100%;}
 #empty section{padding:13vh 7vw;}
 #empty .hero{min-height:calc(100dvh - 52px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;}
-#empty .kicker{font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--sub);margin:0 0 26px;}
+#empty .kicker{font-family:"Helvetica Neue",Arial,"Noto Sans JP",sans-serif;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--sub);margin:0 0 26px;display:inline-flex;align-items:center;gap:10px;}
+#empty .kicker::before{content:"";width:22px;height:2px;background:var(--accent);display:inline-block;}
 #empty h1{font-size:clamp(46px,8.6vw,108px);line-height:1.06;font-weight:600;letter-spacing:.06em;margin:0 0 28px;color:var(--ink);}
 #empty .lede{font-size:clamp(16px,2vw,21px);color:var(--sub);max-width:560px;margin:0 0 40px;line-height:2.05;font-weight:400;}
 #empty .feat{border-top:1px solid var(--hair);}
-#empty .feat .idx{font-family:Georgia,serif;font-size:12px;letter-spacing:.3em;color:var(--faint);margin:0 0 20px;}
+#empty .feat .idx{font-family:"Helvetica Neue",Arial,"Noto Sans JP",sans-serif;font-size:12px;letter-spacing:.2em;color:var(--faint);margin:0 0 22px;text-transform:uppercase;}
+#empty .feat .idx span{color:var(--accent);font-weight:600;margin-right:6px;}
 #empty h2{font-size:clamp(28px,5vw,54px);line-height:1.28;font-weight:600;letter-spacing:.05em;margin:0 0 20px;color:var(--ink);}
 #empty .feat p{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:620px;margin:0;line-height:2.1;}
 #empty .cta{display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
@@ -406,7 +410,7 @@ header.topbar{
 
     <section class="feat">
       <div class="wrap reveal">
-        <p class="idx">01</p>
+        <p class="idx"><span>01</span> Layout ／ 配置</p>
         <h2 class="serif">美しく、ととのう。</h2>
         <p>世代ごとに、左右のつり合いまで自動で調整。指でつかんで動かし、なめらかに拡げたり縮めたり。一枚の絵を眺めるように。</p>
       </div>
@@ -414,7 +418,7 @@ header.topbar{
 
     <section class="feat">
       <div class="wrap reveal">
-        <p class="idx">02</p>
+        <p class="idx"><span>02</span> Bloodline ／ 血脈</p>
         <h2 class="serif">血の道を、姓を超えて。</h2>
         <p>嫁ぎ先で名字が変わっても、養子でも、再婚でも。血のつながりを、そのままていねいに書き継いでいけます。家紋も苗字ごとに選べます。</p>
       </div>
@@ -422,7 +426,7 @@ header.topbar{
 
     <section class="feat">
       <div class="wrap reveal">
-        <p class="idx">03</p>
+        <p class="idx"><span>03</span> Sharing ／ 共有</p>
         <h2 class="serif">一族そろって。</h2>
         <p>一本のリンクで分かち合い。受け取ったご家族も、その場で名を連ねられます。共有時は生年・没年を省く配慮も。</p>
       </div>
@@ -430,7 +434,7 @@ header.topbar{
 
     <section class="feat">
       <div class="wrap reveal">
-        <p class="idx">04</p>
+        <p class="idx"><span>04</span> Export ／ 書き出し</p>
         <h2 class="serif">一枚の作品として。</h2>
         <p>洗練された誌面のしつらえで、画像やPDFに。家の歩みを、手元にも、贈り物にも。</p>
       </div>
@@ -438,7 +442,7 @@ header.topbar{
 
     <section class="feat">
       <div class="wrap reveal">
-        <p class="idx">05</p>
+        <p class="idx"><span>05</span> Start ／ はじめる</p>
         <h2 class="serif">さあ、はじめましょう。</h2>
         <div class="cta" style="margin-top:8px;">
           <button class="btn accent big" data-action="start">最初のひとりを書き入れる</button>

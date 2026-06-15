@@ -18,32 +18,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --bg:#efe7d6;              /* 鳥の子色（和紙） */
-  --bg2:#e7dcc4;            /* 生成りの濃いめ */
-  --paper:#f6f0e1;          /* 料紙（カード・シート） */
-  --surface:#faf6ec;
-  --ink:#211c15;            /* 墨 */
-  --sub:#5d5446;
-  --faint:#8c8270;
-  --hair:#d8ccb2;
-  --line:#5a4d3b;           /* 線（墨茶） */
-  --accent:#b3412c;         /* 朱（しゅ） */
-  --accent-hover:#9b3522;
-  --accent-soft:#f0ddd5;
-  --gold:#b08a3e;           /* 金茶（追加演出の金粉） */
-  --ai:#28415b;             /* 藍 */
-  --male:#2f4b6e;           /* 藍鼠 */
-  --female:#b0586a;         /* 紅梅 */
-  --neutral:#8c8270;
-  --shadow:0 1px 2px rgba(50,38,18,.05), 0 10px 28px rgba(50,38,18,.09);
-  --shadow-lg:0 26px 72px rgba(50,38,18,.24);
-  --radius:12px;
-  --ease:cubic-bezier(.4,.14,.3,1);
-  /* 青海波（せいがいは）の線色 */
+  --bg:#E8E1D2;             /* ベージュ（Actuel基調） */
+  --bg2:#E0D8C6;
+  --paper:#F3EEE3;          /* カード・シート */
+  --surface:#F7F3EA;
+  --ink:#16140F;            /* 黒 */
+  --sub:#57534A;
+  --faint:#8C8678;
+  --hair:#D3CBB9;
+  --line:#2A2620;           /* 連絡線（黒に近い） */
+  --accent:#16140F;         /* モノトーン基調（黒をアクセントに） */
+  --accent-hover:#3a352c;
+  --accent-soft:#E3DCCC;
+  --gold:#9B7B3B;           /* 追加演出の差し色（控えめ） */
+  --male:#5E6B74;           /* 男性（くすみ） */
+  --female:#9A7A82;         /* 女性（くすみ） */
+  --neutral:#8C8678;
+  --shadow:0 1px 2px rgba(30,24,12,.04), 0 8px 24px rgba(30,24,12,.07);
+  --shadow-lg:0 30px 80px rgba(30,24,12,.18);
+  --radius:10px;
+  --ease:cubic-bezier(.22,.61,.36,1);
   --sei:#e0d4b6;
-  /* 雲・波（白）— 背景装飾 */
-  --cloud:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 110'><g fill='%23eef4fb'><circle cx='46' cy='60' r='26'/><circle cx='80' cy='48' r='34'/><circle cx='120' cy='52' r='30'/><circle cx='156' cy='62' r='24'/><rect x='40' y='58' width='124' height='30' rx='15'/></g></svg>");
-  --wave:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 105'><g fill='%23eef4fb'><path d='M4 100 Q4 52 60 52 Q40 22 84 22 Q120 22 120 60 Q120 40 98 44 Q86 64 110 70 Q150 64 150 100 Z'/><circle cx='92' cy='16' r='6'/><circle cx='106' cy='12' r='4.5'/></g></svg>");
+  --cloud:none; --wave:none;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;height:100%;}
@@ -66,14 +62,14 @@ body{
 header.topbar{
   position:fixed;top:0;left:0;right:0;height:52px;z-index:40;
   display:flex;align-items:center;gap:10px;padding:0 18px;
-  background:rgba(255,255,255,.72);
-  backdrop-filter:saturate(180%) blur(20px);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);
-  border-bottom:1px solid rgba(0,0,0,.08);
+  background:rgba(232,225,210,.78);
+  backdrop-filter:saturate(160%) blur(18px);
+  -webkit-backdrop-filter:saturate(160%) blur(18px);
+  border-bottom:1px solid var(--hair);
 }
 .brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
-.brand .mark{font-weight:600;font-size:19px;letter-spacing:-.01em;}
-.brand .sub{font-size:11px;letter-spacing:.06em;color:var(--faint);}
+.brand .mark{font-weight:600;font-size:19px;letter-spacing:.06em;}
+.brand .sub{font-family:Georgia,serif;font-size:11px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase;}
 .spacer{flex:1;}
 .btn{
   font-family:inherit;font-size:14px;font-weight:500;color:var(--ink);
@@ -85,13 +81,16 @@ header.topbar{
 }
 .btn:hover{box-shadow:var(--shadow);border-color:var(--line);}
 .btn:active{transform:scale(.97);}
-.btn.primary{background:var(--ink);color:#f6f0e1;border-color:var(--ink);}
-.btn.accent{background:var(--accent);color:#fbf3ee;border-color:var(--accent);}
-.btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:0 8px 20px rgba(179,65,44,.28);}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.btn.accent{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:var(--shadow);}
 .btn.ghost{background:transparent;border-color:transparent;}
-.btn.big{font-size:18px;font-weight:500;padding:14px 30px;border-radius:11px;}
-.btn.link{background:transparent;border-color:transparent;color:var(--accent);padding:8px 8px;}
-.btn.link:hover{box-shadow:none;color:var(--accent-hover);text-decoration:underline;text-underline-offset:4px;}
+.btn.big{font-size:17px;font-weight:500;padding:15px 34px;border-radius:999px;letter-spacing:.04em;}
+/* テキストリンク：下線がスッと伸びる（Actuel風） */
+.btn.link{background:transparent;border:none;color:var(--ink);padding:6px 2px;position:relative;border-radius:0;}
+.btn.link::after{content:"";position:absolute;left:2px;right:2px;bottom:0;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .4s var(--ease);}
+.btn.link:hover{box-shadow:none;color:var(--ink);}
+.btn.link:hover::after{transform:scaleX(1);}
 .btn.link:active{transform:none;}
 .btn.icon{padding:9px;width:38px;height:38px;justify-content:center;}
 .btn svg{width:18px;height:18px;display:block;}
@@ -106,55 +105,27 @@ header.topbar{
 
 /* ---------- Stage / canvas ---------- */
 /* 青海波（せいがいは）— 色は --A(波線) / --B(地) で切替 */
-.seigaiha{
-  background-color:var(--B,#efe7d6);
-  background-image:
-    radial-gradient(circle at 100% 150%, var(--B,#efe7d6) 24%, var(--A,#e0d4b6) 25%, var(--A,#e0d4b6) 28%, var(--B,#efe7d6) 29%, var(--B,#efe7d6) 36%, var(--A,#e0d4b6) 36%, var(--A,#e0d4b6) 40%, transparent 40%, transparent),
-    radial-gradient(circle at 0 150%, var(--B,#efe7d6) 24%, var(--A,#e0d4b6) 25%, var(--A,#e0d4b6) 28%, var(--B,#efe7d6) 29%, var(--B,#efe7d6) 36%, var(--A,#e0d4b6) 36%, var(--A,#e0d4b6) 40%, transparent 40%, transparent),
-    radial-gradient(circle at 50% 100%, var(--A,#e0d4b6) 10%, var(--B,#efe7d6) 11%, var(--B,#efe7d6) 23%, var(--A,#e0d4b6) 24%, var(--A,#e0d4b6) 30%, var(--B,#efe7d6) 31%, var(--B,#efe7d6) 43%, var(--A,#e0d4b6) 44%, var(--A,#e0d4b6) 50%, var(--B,#efe7d6) 51%, var(--B,#efe7d6) 63%, var(--A,#e0d4b6) 64%, var(--A,#e0d4b6) 71%, transparent 71%, transparent),
-    radial-gradient(circle at 100% 50%, var(--A,#e0d4b6) 5%, var(--B,#efe7d6) 6%, var(--B,#efe7d6) 15%, var(--A,#e0d4b6) 16%, var(--A,#e0d4b6) 20%, var(--B,#efe7d6) 21%, var(--B,#efe7d6) 30%, var(--A,#e0d4b6) 31%, var(--A,#e0d4b6) 35%, var(--B,#efe7d6) 36%, var(--B,#efe7d6) 45%, var(--A,#e0d4b6) 46%, var(--A,#e0d4b6) 49%, transparent 50%, transparent),
-    radial-gradient(circle at 0 50%, var(--A,#e0d4b6) 5%, var(--B,#efe7d6) 6%, var(--B,#efe7d6) 15%, var(--A,#e0d4b6) 16%, var(--A,#e0d4b6) 20%, var(--B,#efe7d6) 21%, var(--B,#efe7d6) 30%, var(--A,#e0d4b6) 31%, var(--A,#e0d4b6) 35%, var(--B,#efe7d6) 36%, var(--B,#efe7d6) 45%, var(--A,#e0d4b6) 46%, var(--A,#e0d4b6) 49%, transparent 50%, transparent);
-  background-size:112px 56px;
-}
-/* キャンバスも濃藍の青海波（雲・波つき） */
-#stage.seigaiha{--B:#1c508f;--A:#cfe1f4;}
-/* 背景ひかえめ（樹形を読みやすく／作業画面の既定） */
-#stage.calm.seigaiha{--B:#eef3f9;--A:#dbe6f2;}
-#stage.calm #seascape{display:none;}
-#stage.calm .link-path{stroke:rgba(40,32,22,.5);}
-#stage.calm .link-path.adopt{stroke:rgba(40,32,22,.5);}
-#stage.calm .link-path.marriage{stroke:var(--accent);}
-#stage.calm .link-ring{fill:var(--paper);stroke:var(--accent);}
-#stage.calm .card{border-color:var(--hair);box-shadow:var(--shadow);}
-/* ランディングの「海」段：濃藍×白の力強い青海波 */
-.sea{--B:#1c508f;--A:#dbe8f7;color:#fdfbf4;}
-/* 背景の雲・波（パンに追従しないアンビエント層） */
-#seascape{position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:var(--cloud),var(--cloud),var(--wave),var(--wave);
-  background-repeat:no-repeat;
-  background-position:5% 9%, 80% 16%, 9% 86%, 90% 80%;
-  background-size:240px,180px,160px,130px;}
-#canvas{z-index:1;}
 #stage{
   position:fixed;inset:52px 0 0 0;overflow:hidden;cursor:grab;touch-action:none;
+  background:var(--bg);
 }
 #stage.grabbing{cursor:grabbing;}
 #canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;}
 #links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
 #nodes{position:absolute;left:0;top:0;}
 
-/* connector animation */
-.link-path{fill:none;stroke:rgba(244,249,255,.7);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.link-path.marriage{stroke:#f2cf7a;stroke-width:2.2;opacity:.95;}
-.link-path.adopt{stroke:rgba(244,249,255,.7);stroke-width:1.8;stroke-dasharray:5 5;}
-.link-ring{fill:#1c508f;stroke:#f2cf7a;stroke-width:1.8;}
+/* connectors（黒に近い線・モノトーン） */
+.link-path{fill:none;stroke:var(--line);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.link-path.marriage{stroke:var(--ink);stroke-width:1.8;}
+.link-path.adopt{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 5;}
+.link-ring{fill:var(--bg);stroke:var(--ink);stroke-width:1.6;}
 .link-path.enter{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .7s .05s var(--ease) forwards;}
 @keyframes draw{to{stroke-dashoffset:0;}}
 
 /* ---------- Person card ---------- */
 .card{
-  position:absolute;background:var(--surface);border:1px solid rgba(255,255,255,.5);
-  border-radius:var(--radius);box-shadow:0 2px 6px rgba(8,28,58,.22), 0 12px 30px rgba(8,28,58,.22);
+  position:absolute;background:var(--surface);border:1px solid var(--hair);
+  border-radius:var(--radius);box-shadow:var(--shadow);
   padding:10px 12px;cursor:pointer;overflow:hidden;
   transition:transform .18s var(--ease), box-shadow .2s var(--ease), border-color .2s;
   display:flex;flex-direction:column;justify-content:center;
@@ -217,50 +188,25 @@ header.topbar{
 .spark.go{animation:spark .85s var(--ease) forwards;}
 @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2);}}
 
-/* ---------- Empty state: 和（日本古来）ランディング ---------- */
+/* ---------- Empty state: ベージュ×黒のミニマル・エディトリアル ---------- */
 #empty{position:absolute;inset:0;display:block;overflow-y:auto;overflow-x:hidden;background:var(--bg);
   touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
-#empty section{position:relative;padding:13vh 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
-#empty .hero{min-height:calc(100dvh - 52px);}
-#empty .feat.alt{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);}
-#empty .hanko{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;margin:0 auto 24px;
-  color:var(--accent);border:2.5px solid var(--accent);border-radius:9px;font-size:34px;font-weight:700;line-height:1;
-  background:rgba(179,65,44,.05);transform:rotate(-3deg);box-shadow:0 2px 0 rgba(179,65,44,.1);}
-#empty .eyebrow{color:var(--accent);font-weight:600;font-size:clamp(14px,1.7vw,17px);margin:0 0 16px;letter-spacing:.42em;padding-left:.42em;}
-#empty h1{font-size:clamp(52px,13vw,120px);line-height:1.02;font-weight:700;letter-spacing:.12em;margin:0 0 24px;color:var(--ink);}
-#empty h1 .dot{color:var(--accent);}
-#empty h2{font-size:clamp(28px,6vw,52px);line-height:1.18;font-weight:600;letter-spacing:.06em;margin:0 0 20px;color:var(--ink);}
-#empty .lede{font-size:clamp(17px,2.3vw,23px);color:var(--sub);max-width:600px;margin:0 auto 34px;line-height:1.85;font-weight:400;}
-#empty .feat p{font-size:clamp(16px,2vw,21px);color:var(--sub);max-width:560px;margin:0 auto;line-height:1.95;}
-#empty .cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;}
-#empty .foot{text-align:center;color:var(--faint);font-size:13px;padding:26px 24px 60px;margin:0;letter-spacing:.1em;}
-#empty .tate-label{position:absolute;right:max(20px,4vw);top:16vh;font-size:clamp(18px,2.4vw,26px);
-  letter-spacing:.34em;color:var(--faint);opacity:.55;pointer-events:none;}
-#empty .rule{width:46px;height:2px;background:var(--accent);margin:0 auto 26px;opacity:.85;}
-.reveal{opacity:0;transform:translateY(28px);transition:opacity 1.05s var(--ease),transform 1.05s var(--ease);}
+#empty .wrap{max-width:1080px;margin:0 auto;width:100%;}
+#empty section{padding:13vh 7vw;}
+#empty .hero{min-height:calc(100dvh - 52px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;}
+#empty .kicker{font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--sub);margin:0 0 26px;}
+#empty h1{font-size:clamp(46px,8.6vw,108px);line-height:1.06;font-weight:600;letter-spacing:.06em;margin:0 0 28px;color:var(--ink);}
+#empty .lede{font-size:clamp(16px,2vw,21px);color:var(--sub);max-width:560px;margin:0 0 40px;line-height:2.05;font-weight:400;}
+#empty .feat{border-top:1px solid var(--hair);}
+#empty .feat .idx{font-family:Georgia,serif;font-size:12px;letter-spacing:.3em;color:var(--faint);margin:0 0 20px;}
+#empty h2{font-size:clamp(28px,5vw,54px);line-height:1.28;font-weight:600;letter-spacing:.05em;margin:0 0 20px;color:var(--ink);}
+#empty .feat p{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:620px;margin:0;line-height:2.1;}
+#empty .cta{display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
+#empty .foot{color:var(--faint);font-size:12px;padding:30px 7vw 64px;margin:0;letter-spacing:.12em;border-top:1px solid var(--hair);}
+#empty .foot button{display:block;margin-top:8px;}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity 1.1s var(--ease),transform 1.1s var(--ease);}
 .reveal.in{opacity:1;transform:none;}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
-/* 濃藍の段：雲と波＋文字を読みやすくする霞 */
-#empty .sea{position:relative;overflow:hidden;}
-#empty .sea > *{position:relative;z-index:1;}
-/* 中央を少し沈める霞（白文字の可読性確保） */
-#empty .sea::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(130% 88% at 50% 44%, rgba(9,26,55,.66) 0%, rgba(9,26,55,.40) 44%, rgba(9,26,55,0) 74%);}
-/* 雲（左上）と波（右下） */
-#empty .sea::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:var(--cloud),var(--wave);background-repeat:no-repeat,no-repeat;
-  background-position:-10px 7%, calc(100% + 12px) 93%;
-  background-size:clamp(180px,28vw,280px) auto, clamp(130px,22vw,200px) auto;}
-/* 濃藍の段の上は白系の文字＋強めの影で可読性を確保 */
-#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p{color:#fdfbf4;}
-#empty .sea h1,#empty .sea h2,#empty .sea .lede,#empty .sea p,#empty .sea .eyebrow,#empty .sea .hanko,#empty .sea .btn.link{
-  text-shadow:0 2px 3px rgba(6,18,40,.6), 0 0 22px rgba(6,18,40,.9), 0 0 48px rgba(6,18,40,.65);}
-#empty .sea .eyebrow{color:#ecd08a;}
-#empty .sea .rule{background:#ecd08a;opacity:.95;}
-#empty .sea .hanko{color:#fdfbf4;border-color:#fdfbf4;background:rgba(255,255,255,.1);box-shadow:0 2px 0 rgba(0,0,0,.18);}
-#empty .sea .btn.link{color:#fdfbf4;}
-#empty .sea .btn.link:hover{color:#fff;}
-#empty .sea .tate-label{color:#fdfbf4;opacity:.5;}
 
 /* ---------- Zoom controls ---------- */
 .zoomctl{position:fixed;right:16px;bottom:18px;z-index:35;display:flex;flex-direction:column;gap:8px;}
@@ -437,61 +383,70 @@ header.topbar{
   <div id="filterbar"><span class="flabel">苗字でしぼり込み</span></div>
 </div>
 
-<div id="stage" class="seigaiha">
-  <div id="seascape" aria-hidden="true"></div>
+<div id="stage">
   <div id="canvas">
     <svg id="links"></svg>
     <div id="nodes"></div>
   </div>
 
-  <!-- empty state: 和（日本古来）ランディング -->
+  <!-- empty state: ベージュ×黒のミニマル・エディトリアル -->
   <div id="empty">
-    <section class="hero sea seigaiha reveal">
-      <span class="hanko serif" aria-hidden="true">家</span>
-      <p class="eyebrow serif">ご先祖から、あなたへ</p>
-      <h1 class="serif">いえつなぎ</h1>
-      <p class="lede">名前を書き入れるだけ。<br>血のつながりの美しい一枚が、自動で仕上がります。</p>
-      <div class="cta">
-        <button class="btn accent big" id="emptyStart">つくりはじめる</button>
-        <button class="btn link big" id="emptySample">見本を見る ›</button>
-      </div>
-      <button class="btn link" id="emptyGuide" style="margin-top:6px;">はじめての方へ（使い方）</button>
-      <div class="tate-label serif tate" aria-hidden="true">系譜</div>
-    </section>
-
-    <section class="feat reveal">
-      <div class="rule"></div>
-      <h2 class="serif">美しく、ととのう。</h2>
-      <p>世代ごとに、左右のつり合いまで自動で調整。指でつかんで動かし、なめらかに拡げたり縮めたり。掛軸を眺めるように。</p>
-    </section>
-
-    <section class="feat sea seigaiha reveal">
-      <div class="rule"></div>
-      <h2 class="serif">血の道を、<br>姓を超えて。</h2>
-      <p>嫁ぎ先で名字が変わっても、養子でも、再婚でも。血のつながりを、そのままていねいに書き継いでいけます。</p>
-    </section>
-
-    <section class="feat reveal">
-      <div class="rule"></div>
-      <h2 class="serif">一族そろって。</h2>
-      <p>一本のリンクで分かち合い。受け取ったご家族も、その場で名を連ねられます。</p>
-    </section>
-
-    <section class="feat sea seigaiha reveal">
-      <div class="rule"></div>
-      <h2 class="serif">一幅の絵として。</h2>
-      <p>雅やかな誌面のしつらえで、ストーリーズ用の画像やPDFに。家の歩みを、一枚に。</p>
-    </section>
-
-    <section class="hero sea seigaiha reveal" style="min-height:auto;">
-      <span class="hanko serif" aria-hidden="true">始</span>
-      <h2 class="serif">さあ、はじめましょう。</h2>
-      <div class="cta" style="margin-top:10px;">
-        <button class="btn accent big" data-action="start">最初のひとりを書き入れる</button>
-        <button class="btn link big" data-action="sample">見本を見る ›</button>
+    <section class="hero">
+      <div class="wrap reveal">
+        <p class="kicker">Ietsunagi — Family Tree</p>
+        <h1 class="serif">家族の系図を、<br>美しく綴る。</h1>
+        <p class="lede">名前を書き入れるだけ。世代も、左右のつり合いも自動で整い、血のつながりの一枚が静かに仕上がります。</p>
+        <div class="cta">
+          <button class="btn accent big" id="emptyStart">つくりはじめる</button>
+          <button class="btn link big" id="emptySample">見本を見る</button>
+          <button class="btn link" id="emptyGuide">使い方</button>
+        </div>
       </div>
     </section>
-    <p class="foot">入力した内容は、この端末の中だけに保存されます（サーバー送信なし）　—　いえつなぎ Ietsunagi<br><button class="btn link" id="emptyPrivacy" style="font-size:13px;margin-top:6px;">プライバシーとデータについて</button></p>
+
+    <section class="feat">
+      <div class="wrap reveal">
+        <p class="idx">01</p>
+        <h2 class="serif">美しく、ととのう。</h2>
+        <p>世代ごとに、左右のつり合いまで自動で調整。指でつかんで動かし、なめらかに拡げたり縮めたり。一枚の絵を眺めるように。</p>
+      </div>
+    </section>
+
+    <section class="feat">
+      <div class="wrap reveal">
+        <p class="idx">02</p>
+        <h2 class="serif">血の道を、姓を超えて。</h2>
+        <p>嫁ぎ先で名字が変わっても、養子でも、再婚でも。血のつながりを、そのままていねいに書き継いでいけます。家紋も苗字ごとに選べます。</p>
+      </div>
+    </section>
+
+    <section class="feat">
+      <div class="wrap reveal">
+        <p class="idx">03</p>
+        <h2 class="serif">一族そろって。</h2>
+        <p>一本のリンクで分かち合い。受け取ったご家族も、その場で名を連ねられます。共有時は生年・没年を省く配慮も。</p>
+      </div>
+    </section>
+
+    <section class="feat">
+      <div class="wrap reveal">
+        <p class="idx">04</p>
+        <h2 class="serif">一枚の作品として。</h2>
+        <p>洗練された誌面のしつらえで、画像やPDFに。家の歩みを、手元にも、贈り物にも。</p>
+      </div>
+    </section>
+
+    <section class="feat">
+      <div class="wrap reveal">
+        <p class="idx">05</p>
+        <h2 class="serif">さあ、はじめましょう。</h2>
+        <div class="cta" style="margin-top:8px;">
+          <button class="btn accent big" data-action="start">最初のひとりを書き入れる</button>
+          <button class="btn link big" data-action="sample">見本を見る</button>
+        </div>
+      </div>
+    </section>
+    <p class="foot">入力した内容は、この端末の中だけに保存されます（サーバー送信なし）　—　いえつなぎ Ietsunagi<button class="btn link" id="emptyPrivacy" style="font-size:12px;">プライバシーとデータについて</button></p>
   </div>
 </div>
 
@@ -703,7 +658,6 @@ header.topbar{
         <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
         <button class="btn" id="menuExport" style="justify-content:flex-start;padding:14px;">データを書き出す（バックアップ）</button>
         <button class="btn" id="menuImport" style="justify-content:flex-start;padding:14px;">データを読み込む</button>
-        <button class="btn" id="menuCalm" style="justify-content:flex-start;padding:14px;">背景をひかえめにする</button>
         <button class="btn" id="menuPrivacy" style="justify-content:flex-start;padding:14px;">プライバシーとデータについて</button>
         <button class="btn danger" id="menuClear" style="justify-content:flex-start;padding:14px;">すべて消去してまっさらにする</button>
       </div>
@@ -1785,15 +1739,6 @@ $("#importFile").addEventListener("change",e=>{
   rd.readAsText(f); e.target.value="";
 });
 $("#menuPrivacy").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openOverlay($("#privacyOverlay")); });
-/* 作業画面の背景。既定は「ひかえめ（読みやすい）」。設定は端末に保存 */
-function calmOn(){ return localStorage.getItem("kinship.calm")!=="0"; }
-function applyCalm(){ const on=calmOn(); stage.classList.toggle("calm",on);
-  const b=$("#menuCalm"); if(b) b.textContent = on? "背景を青海波（濃いめ）にする" : "背景をひかえめにする"; }
-$("#menuCalm").addEventListener("click",()=>{
-  const on=calmOn();
-  try{ localStorage.setItem("kinship.calm", on?"0":"1"); }catch(e){}
-  applyCalm(); toast(on?"背景を青海波にしました":"背景をひかえめにしました");
-});
 
 /* =========================================================
    SHARE  (家系図をリンクに埋め込んで共有。共有相手も追加できる)
@@ -2125,7 +2070,6 @@ function loadSample(){
    ========================================================= */
 load();
 applyView();
-applyCalm();
 const fromShare = loadFromHash();   // 共有リンクで来た場合はそれを読み込む
 if(!fromShare){
   render();

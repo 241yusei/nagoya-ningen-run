@@ -267,6 +267,11 @@ input[type=range]{accent-color:var(--accent);}
 .share-note{font-size:12.5px;color:var(--sub);background:var(--accent-soft);border-radius:11px;padding:12px 14px;margin-top:14px;}
 .share-lead{font-size:14.5px;color:var(--ink);margin:0 0 4px;line-height:1.7;}
 .export-hint{font-size:13.5px;color:var(--sub);margin:0 0 14px;}
+.theme-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.theme-row::-webkit-scrollbar{display:none;}
+.theme-chip{flex:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--sub);background:var(--bg2);border:1px solid var(--hair);border-radius:999px;padding:8px 15px;cursor:pointer;transition:.18s var(--ease);white-space:nowrap;}
+.theme-chip:hover{color:var(--ink);}
+.theme-chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
 .export-preview{width:100%;border-radius:12px;border:1px solid var(--hair);margin-bottom:18px;display:block;background:#EFEBE2;}
 .export-grid{display:flex;flex-direction:column;gap:10px;}
 .export-grid .btn{justify-content:flex-start;padding:14px;font-size:15px;}
@@ -762,7 +767,8 @@ input[type=range]{accent-color:var(--accent);}
   <div class="sheet" role="dialog" aria-modal="true">
     <div class="hd"><h2>画像・PDFにする</h2><button class="x" data-close>×</button></div>
     <div class="bd">
-      <p class="export-hint">海外の雑誌のような、洗練されたレイアウトで書き出します。下のプレビューで仕上がりを確認できます。</p>
+      <p class="export-hint">家柄・年代でデザインを選び、ストーリーズや印刷用に書き出せます。下で仕上がりを確認できます。</p>
+      <div class="theme-row" id="themeRow"></div>
       <canvas class="export-preview" id="exportPreview" width="540" height="960"></canvas>
       <div class="export-grid">
         <button class="btn accent" id="expStory"><span class="em">ストーリーズ用の画像</span><small>縦長 1080×1920</small></button>
@@ -1970,19 +1976,13 @@ $("#pwInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pwSubmit")
 /* =========================================================
    EXPORT — magazine-style poster (Canvas) → PNG / PDF
    ========================================================= */
-const POSTER_BG="#F3EFE6", POSTER_INK="#1A1916", POSTER_SUB="#6E685C",
-      POSTER_LINE="#1A1916", POSTER_HAIR="#C8C0AF", POSTER_ACCENT="#9A4A2B",
-      POSTER_CARD="#FBFAF6";
-
 function dominantSurname(){
   const c={}; for(const id of state.order){ const s=state.persons[id].last; if(s) c[s]=(c[s]||0)+1; }
   let best=null,bn=0; for(const k in c){ if(c[k]>bn){bn=c[k];best=k;} }
   return best;
 }
 function genCount(){ const g=computeGenerations(); let m=0; for(const id of state.order) m=Math.max(m,g[id]||0); return m+1; }
-
 function spaced(ctx,text,x,y,sp,align){
-  // letter-spaced text (align: 'left'|'center'|'right')
   const chars=[...text];
   let total=0; for(const ch of chars) total+=ctx.measureText(ch).width+sp; total-=sp;
   let sx = align==='center'? x-total/2 : align==='right'? x-total : x;
@@ -1990,164 +1990,158 @@ function spaced(ctx,text,x,y,sp,align){
   for(const ch of chars){ ctx.fillText(ch,sx,y); sx+=ctx.measureText(ch).width+sp; }
   ctx.textAlign=prev;
 }
-function rr(ctx,x,y,w,h,r){
-  ctx.beginPath();
+function rr(ctx,x,y,w,h,r){ ctx.beginPath();
   ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-}
-function fitText(ctx,text,maxw){
-  if(ctx.measureText(text).width<=maxw) return text;
-  let t=text;
-  while(t.length>1 && ctx.measureText(t+"…").width>maxw) t=t.slice(0,-1);
-  return t+"…";
-}
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function fitText(ctx,text,maxw){ if(ctx.measureText(text).width<=maxw) return text;
+  let t=text; while(t.length>1 && ctx.measureText(t+"…").width>maxw) t=t.slice(0,-1); return t+"…"; }
 
-function drawTreeInto(ctx, area){
+/* ---------- 枠・装飾ライブラリ ---------- */
+function frameThin(ctx,W,H,m,c){ ctx.strokeStyle=c; ctx.lineWidth=1.6; ctx.strokeRect(m*0.5,m*0.5,W-m,H-m); }
+function frameDouble(ctx,W,H,m,c){ ctx.strokeStyle=c; ctx.lineWidth=2.4; ctx.strokeRect(m*0.5,m*0.5,W-m,H-m); ctx.lineWidth=1; ctx.strokeRect(m*0.5+9,m*0.5+9,W-m-18,H-m-18); }
+function frameDeco(ctx,W,H,m,c){ const o=m*0.5; ctx.strokeStyle=c; ctx.lineWidth=2; ctx.strokeRect(o,o,W-m,H-m); ctx.lineWidth=1; ctx.strokeRect(o+11,o+11,W-m-22,H-m-22);
+  const L=Math.round(W*0.05); ctx.lineWidth=3.2;
+  [[o+11,o+11,1,1],[W-o-11,o+11,-1,1],[o+11,H-o-11,1,-1],[W-o-11,H-o-11,-1,-1]].forEach(([x,y,sx,sy])=>{ ctx.beginPath(); ctx.moveTo(x,y+sy*L); ctx.lineTo(x,y); ctx.lineTo(x+sx*L,y); ctx.stroke(); }); }
+function frameTriangles(ctx,W,H,m,c){ ctx.strokeStyle=c; ctx.lineWidth=2; ctx.strokeRect(m*0.5,m*0.5,W-m,H-m);
+  const y1=m*0.5+14, y2=H-m*0.5-14, x=m*0.5+14, w=W-m-28, h=12, n=Math.floor(w/(h*1.2)), tw=w/n;
+  ctx.fillStyle=c; for(const yy of [y1,y2]) for(let i=0;i<n;i++){ ctx.beginPath(); ctx.moveTo(x+i*tw,yy+h); ctx.lineTo(x+i*tw+tw/2,yy); ctx.lineTo(x+i*tw+tw,yy+h); ctx.closePath(); ctx.fill(); } }
+function frameMeander(ctx,W,H,m,c){ ctx.strokeStyle=c; ctx.lineWidth=1.6; ctx.strokeRect(m*0.5,m*0.5,W-m,H-m);
+  const u=Math.round(W*0.02), x0=m*0.5+12, w=W-m-24, n=Math.floor(w/(u*2));
+  ctx.lineWidth=2.2; ctx.lineJoin="miter"; ctx.strokeStyle=c;
+  for(const yy of [m*0.5+12, H-m*0.5-12-u*1.5]){ ctx.beginPath();
+    for(let i=0;i<n;i++){ const px=x0+i*u*2; ctx.moveTo(px,yy+u*1.5); ctx.lineTo(px,yy); ctx.lineTo(px+u*1.4,yy); ctx.lineTo(px+u*1.4,yy+u); ctx.lineTo(px+u*0.6,yy+u); ctx.lineTo(px+u*0.6,yy+u*0.6); } ctx.stroke(); } }
+function star(ctx,cx,cy,r,c){ ctx.fillStyle=c; ctx.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rad=i%2?r*0.42:r; ctx.lineTo(cx+rad*Math.cos(a),cy+rad*Math.sin(a)); } ctx.closePath(); ctx.fill(); }
+function ornStars(ctx,cx,y,W,t){ const n=5,g=W*0.05,r=W*0.014; for(let i=0;i<n;i++) star(ctx,cx-(n-1)*g/2+i*g,y,r,t.accent); }
+function ornDiamond(ctx,cx,y,W,t){ ctx.fillStyle=t.accent; const r=W*0.013; [-1,0,1].forEach(k=>{ const x=cx+k*W*0.035, rr2=k?r*0.7:r; ctx.beginPath(); ctx.moveTo(x,y-rr2); ctx.lineTo(x+rr2,y); ctx.lineTo(x,y+rr2); ctx.lineTo(x-rr2,y); ctx.closePath(); ctx.fill(); }); }
+function ornLaurel(ctx,cx,y,W,t){ ctx.fillStyle=t.accent; for(const side of [-1,1]){ for(let i=0;i<6;i++){ const tt=i/6, lx=cx+side*(W*0.03+tt*W*0.05), ly=y-tt*6; ctx.save(); ctx.translate(lx,ly); ctx.rotate(side*(0.7-tt*0.6)); ctx.beginPath(); ctx.ellipse(0,0,W*0.009,W*0.0035,0,0,Math.PI*2); ctx.fill(); ctx.restore(); } } }
+function ornDeco(ctx,cx,y,W,t){ ctx.strokeStyle=t.accent; ctx.lineWidth=2.4; for(let i=-2;i<=2;i++){ const h=W*0.014-Math.abs(i)*W*0.003; ctx.beginPath(); ctx.moveTo(cx+i*W*0.018,y-h); ctx.lineTo(cx+i*W*0.018,y+h); ctx.stroke(); } }
+function ornRule(ctx,cx,y,W,t){ ctx.strokeStyle=t.accent; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(cx-W*0.05,y); ctx.lineTo(cx+W*0.05,y); ctx.stroke(); }
+function ornZig(ctx,cx,y,W,t){ ctx.strokeStyle=t.accent; ctx.lineWidth=3; ctx.lineJoin="miter"; const w=W*0.12,s=W*0.02; ctx.beginPath(); let up=true; for(let x=cx-w/2;x<=cx+w/2;x+=s){ ctx.lineTo(x,y+(up?-s*0.6:s*0.6)); up=!up; } ctx.stroke(); }
+
+/* ---------- テーマ（家柄・年代でデザインを切替） ---------- */
+const THEMES=[
+  {id:"modern",name:"モダン",bg:"#FAF9F5",ink:"#141413",sub:"#6B6A62",hair:"#E1DED3",line:"#141413",card:"#FFFFFF",cardInk:"#141413",accent:"#D97757",
+   disp:"'Noto Serif JP',Georgia,serif",dispW:700,lat:"Georgia,serif",kicker:"FAMILY ARCHIVE",sub2:"The Family Lineage",frame:frameThin,orn:ornRule,cardR:12},
+  {id:"wa-koten",name:"和・古典",bg:"#EDE6D6",ink:"#1E1A14",sub:"#6A5F4C",hair:"#CFC2A6",line:"#1E1A14",card:"#F6F1E5",cardInk:"#1E1A14",accent:"#B3412C",
+   disp:"'Shippori Mincho',serif",dispW:700,lat:"Georgia,serif",kicker:"家 系 圖",sub2:"血脈の記録",frame:frameDouble,orn:ornDiamond,cardR:3},
+  {id:"wa-showa",name:"和・昭和",bg:"#F2E9D6",ink:"#2A2218",sub:"#7A6A52",hair:"#D8C4A0",line:"#2A2218",card:"#FBF5E7",cardInk:"#2A2218",accent:"#C9622E",
+   disp:"'Shippori Mincho',serif",dispW:700,lat:"Georgia,serif",kicker:"家系図 / KEIZU",sub2:"わが家のあゆみ",frame:frameThin,orn:ornDiamond,cardR:8},
+  {id:"america",name:"アメリカ",bg:"#F4EFE2",ink:"#1B2A4A",sub:"#5b6b86",hair:"#cdbfa6",line:"#1B2A4A",card:"#FFFFFF",cardInk:"#1B2A4A",accent:"#B22234",
+   disp:"'Noto Sans JP',sans-serif",dispW:700,lat:"Georgia,serif",kicker:"EST. FAMILY",sub2:"An American Family",frame:frameDouble,orn:ornStars,cardR:6},
+  {id:"africa",name:"アフリカ",bg:"#E9C9A0",ink:"#2A1B12",sub:"#6e4f38",hair:"#c79a6a",line:"#2A1B12",card:"#F3DEBF",cardInk:"#2A1B12",accent:"#C0451B",
+   disp:"'Noto Sans JP',sans-serif",dispW:700,lat:"Georgia,serif",kicker:"ROOTS & LINEAGE",sub2:"Our Heritage",frame:frameTriangles,orn:ornZig,cardR:4},
+  {id:"ancient",name:"古代",bg:"#E7D7B0",ink:"#3A2C16",sub:"#7a6438",hair:"#c9b483",line:"#3A2C16",card:"#F1E6C8",cardInk:"#3A2C16",accent:"#7A4A1E",
+   disp:"'Noto Serif JP',serif",dispW:700,lat:"Georgia,serif",kicker:"GENEALOGIA",sub2:"Origines Familiae",frame:frameMeander,orn:ornRule,cardR:2},
+  {id:"europe",name:"ヨーロッパ",bg:"#EDE9DD",ink:"#1E2E22",sub:"#5a6b5d",hair:"#c3c0ab",line:"#1E2E22",card:"#F7F4EA",cardInk:"#1E2E22",accent:"#9C7B2E",
+   disp:"'Noto Serif JP',serif",dispW:700,lat:"Georgia,serif",kicker:"MAISON · FAMILY",sub2:"The Family House",frame:frameDouble,orn:ornLaurel,cardR:3},
+  {id:"italy",name:"イタリア",bg:"#F1E6D6",ink:"#3A2A20",sub:"#7a5e48",hair:"#cdb594",line:"#3A2A20",card:"#FAF2E5",cardInk:"#3A2A20",accent:"#1F6E4E",
+   disp:"'Noto Serif JP',serif",dispW:700,lat:"Georgia,serif",kicker:"FAMIGLIA",sub2:"La Famiglia",frame:frameDouble,orn:ornLaurel,cardR:4},
+  {id:"france",name:"フランス",bg:"#F3F1EA",ink:"#1A1A1A",sub:"#6a6a64",hair:"#d3cdbd",line:"#1A1A1A",card:"#FFFFFF",cardInk:"#1A1A1A",accent:"#9C7B2E",
+   disp:"'Noto Serif JP',serif",dispW:600,lat:"'Helvetica Neue',Arial,sans-serif",kicker:"FAMILLE",sub2:"La Famille",frame:frameDeco,orn:ornDeco,cardR:6},
+];
+function getTheme(id){ return THEMES.find(t=>t.id===id)||THEMES[0]; }
+
+function drawTreeInto(ctx, area, t){
   const L=buildLayout(null);
   if(!L.width){ return; }
   const s=Math.min(area.w/L.width, area.h/L.height);
   const ox=area.x+(area.w-L.width*s)/2;
   const oy=area.y+(area.h-L.height*s)/2;
   ctx.save(); ctx.translate(ox,oy); ctx.scale(s,s);
-
   // connectors
-  ctx.strokeStyle=POSTER_INK; ctx.lineWidth=1.5; ctx.lineCap="round"; ctx.lineJoin="round";
+  ctx.strokeStyle=t.line; ctx.lineWidth=1.5; ctx.lineCap="round"; ctx.lineJoin="round";
   for(const u of L.units){
     if(u.members.length===2){
       const a=L.rects[u.members[0]], b=L.rects[u.members[1]], y=a.cy;
-      ctx.beginPath(); ctx.moveTo(a.x+CARD_W,y); ctx.lineTo(b.x,y); ctx.stroke();
-      ctx.beginPath(); ctx.arc((a.x+CARD_W+b.x)/2,y,4.5,0,Math.PI*2);
-      ctx.fillStyle=POSTER_BG; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(a.x+CARD_W,y); ctx.lineTo(b.x,y);
+      ctx.strokeStyle=t.accent; ctx.stroke(); ctx.strokeStyle=t.line;
+      ctx.beginPath(); ctx.arc((a.x+CARD_W+b.x)/2,y,4.5,0,Math.PI*2); ctx.fillStyle=t.bg; ctx.fill(); ctx.strokeStyle=t.accent; ctx.stroke(); ctx.strokeStyle=t.line;
     }
     if(u.children.length){
-      const startX = u.members.length===2 ? u._coupleCx : u._anchorCx;
-      const parentBottom=u._y+CARD_H, busY=parentBottom+V_GAP*0.45;
-      const cxs=u.children.map(c=>c._anchorCx);
-      const minCx=Math.min(...cxs), maxCx=Math.max(...cxs);
-      ctx.beginPath();
-      ctx.moveTo(startX,parentBottom); ctx.lineTo(startX,busY);
-      ctx.moveTo(minCx,busY); ctx.lineTo(maxCx,busY);
-      for(const c of u.children){ ctx.moveTo(c._anchorCx,busY); ctx.lineTo(c._anchorCx,c._y); }
-      ctx.stroke();
+      const startX=u.members.length===2?u._coupleCx:u._anchorCx, parentBottom=u._y+CARD_H, busY=parentBottom+V_GAP*0.45;
+      const cxs=u.children.map(c=>c._anchorCx), minCx=Math.min(...cxs), maxCx=Math.max(...cxs);
+      for(const c of u.children){
+        const adop=state.persons[c.anchor]&&state.persons[c.anchor].adopted;
+        ctx.save(); if(adop) ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(c._anchorCx,busY); ctx.lineTo(c._anchorCx,c._y); ctx.stroke(); ctx.restore();
+      }
+      ctx.beginPath(); ctx.moveTo(startX,parentBottom); ctx.lineTo(startX,busY); ctx.moveTo(minCx,busY); ctx.lineTo(maxCx,busY); ctx.stroke();
     }
   }
   // cards
   for(const id of state.order){
     const p=state.persons[id], r=L.rects[id]; if(!r) continue;
-    rr(ctx,r.x,r.y,CARD_W,CARD_H,11);
-    ctx.fillStyle=POSTER_CARD; ctx.fill();
-    ctx.lineWidth=1.2; ctx.strokeStyle=POSTER_HAIR; ctx.stroke();
-    // gender accent bar
-    ctx.fillStyle = p.gender==="male"?"#5B7B9A":p.gender==="female"?"#B07089":"#9A4A2B";
-    rr(ctx,r.x,r.y,4,CARD_H,2); ctx.save(); ctx.clip();
-    ctx.fillRect(r.x,r.y,4,CARD_H); ctx.restore();
+    rr(ctx,r.x,r.y,CARD_W,CARD_H,t.cardR); ctx.fillStyle=t.card; ctx.fill();
+    ctx.lineWidth=1.2; ctx.strokeStyle=t.hair; ctx.stroke();
+    // gender dot
+    ctx.fillStyle=p.gender==="male"?"#6A9BCC":p.gender==="female"?"#BC8AA0":t.accent;
+    ctx.beginPath(); ctx.arc(r.x+15,r.y+CARD_H/2,4,0,Math.PI*2); ctx.fill();
     // name
-    ctx.fillStyle=POSTER_INK; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
-    ctx.font="600 19px 'Shippori Mincho', serif";
-    const hasYears = (p.birth||p.death);
-    ctx.fillText(fitText(ctx,fullName(p),CARD_W-26), r.x+14, r.y+(hasYears?30:40));
-    // years
-    if(hasYears){
-      ctx.fillStyle=POSTER_SUB; ctx.font="400 12px 'Noto Sans JP', sans-serif";
+    ctx.fillStyle=t.cardInk; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
+    ctx.font="600 18px 'Noto Sans JP',sans-serif";
+    const hasYears=(p.birth||p.death);
+    ctx.fillText(fitText(ctx,fullName(p),CARD_W-40), r.x+26, r.y+(hasYears?27:CARD_H/2+6));
+    if(hasYears){ ctx.fillStyle=t.sub; ctx.font="400 11px 'Noto Sans JP',sans-serif";
       const by=p.birth?p.birth.slice(0,4):"", dy=p.death?p.death.slice(0,4):"";
-      const yr = p.death? `${by||"?"} – ${dy||"?"}` : (by? `b. ${by}`:"");
-      ctx.fillText(yr, r.x+14, r.y+50);
-    }
+      ctx.fillText(p.death?`${by||"?"} – ${dy||"?"}`:(by?`b. ${by}`:""), r.x+26, r.y+45); }
   }
   ctx.restore();
 }
 
-function drawPoster(ctx,W,H,crestImg){
+function drawPoster(ctx,W,H,crestImg,t){
   const m=Math.round(W*0.075);
-  // background
-  ctx.fillStyle=POSTER_BG; ctx.fillRect(0,0,W,H);
-  // thin outer frame
-  ctx.strokeStyle=POSTER_HAIR; ctx.lineWidth=1.5;
-  ctx.strokeRect(Math.round(m*0.5)+0.5, Math.round(m*0.5)+0.5, W-m, H-m);
-
+  ctx.fillStyle=t.bg; ctx.fillRect(0,0,W,H);
+  t.frame(ctx,W,H,m,t.line);
   const cx=W/2, left=m, right=W-m, cw=right-left;
-  const now=new Date();
-  const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月`;
-  const dateEn=now.toLocaleDateString("en-US",{month:"long",year:"numeric"}).toUpperCase();
-
-  // ---- header (editorial) ----
-  let y=m*1.35;
-  // kicker rule + small caps
-  ctx.fillStyle=POSTER_SUB;
-  ctx.font=`500 ${Math.round(W*0.0145)}px Georgia, 'Times New Roman', serif`;
-  ctx.textBaseline="alphabetic";
-  spaced(ctx,"FAMILY ARCHIVE", left, y, W*0.006, "left");
-  spaced(ctx,"VOL. I", right, y, W*0.006, "right");
-  y+=Math.round(W*0.018);
-  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=1.4;
-  ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
-
-  // 家紋（代表的な苗字）を題字の上に押す
+  const now=new Date(), year=now.getFullYear();
+  // kicker
+  let y=m*1.4;
+  ctx.fillStyle=t.sub; ctx.font=`600 ${Math.round(W*0.0145)}px ${t.lat}`; ctx.textBaseline="alphabetic";
+  spaced(ctx,t.kicker,left,y,W*0.005,"left");
+  spaced(ctx,"ANNO "+year,right,y,W*0.005,"right");
+  y+=Math.round(W*0.02); ctx.strokeStyle=t.line; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+  // crest emblem
   const sur=dominantSurname();
-  if(crestImg){ const cs=Math.round(W*0.12); ctx.drawImage(crestImg, cx-cs/2, y+Math.round(H*0.05)-cs/2, cs, cs); }
-  // masthead title
-  const title = sur? sur+"家" : "わたしの家系図";
-  y += Math.round(H*0.115);
-  let ts=Math.round(W*0.135);
-  ctx.fillStyle=POSTER_INK;
-  do{ ctx.font=`700 ${ts}px 'Shippori Mincho', serif`; ts-=2; }
-  while(ctx.measureText(title).width>cw && ts>20);
-  ctx.textAlign="center"; ctx.fillText(title, cx, y);
-  ctx.textAlign="left";
-
-  // subtitle (italic serif, English)
-  y += Math.round(W*0.05);
-  ctx.fillStyle=POSTER_SUB;
-  ctx.font=`italic 400 ${Math.round(W*0.026)}px Georgia, 'Times New Roman', serif`;
-  ctx.textAlign="center";
-  ctx.fillText("The Family Lineage", cx, y);
-  ctx.textAlign="left";
-
-  // date + small caps line
-  y += Math.round(W*0.045);
-  ctx.fillStyle=POSTER_SUB; ctx.font=`500 ${Math.round(W*0.0135)}px Georgia, serif`;
-  ctx.textAlign="center"; spaced(ctx,dateEn,cx,y,W*0.005,"center"); ctx.textAlign="left";
-  y += Math.round(W*0.025);
-  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=2.2;
-  ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+  if(crestImg){ const cs=Math.round(W*0.13); ctx.drawImage(crestImg,cx-cs/2,y+Math.round(H*0.052)-cs/2,cs,cs); }
+  else if(t.orn){ t.orn(ctx,cx,y+Math.round(H*0.052),W,t); }
+  // masthead
+  const title=sur?sur+"家":"わたしの家系図";
+  y+=Math.round(H*0.115);
+  let ts=Math.round(W*0.135); ctx.fillStyle=t.ink;
+  do{ ctx.font=`${t.dispW} ${ts}px ${t.disp}`; ts-=2; } while(ctx.measureText(title).width>cw && ts>20);
+  ctx.textAlign="center"; ctx.fillText(title,cx,y); ctx.textAlign="left";
+  // subtitle
+  y+=Math.round(W*0.05); ctx.fillStyle=t.sub; ctx.font=`italic 400 ${Math.round(W*0.026)}px ${t.lat}`;
+  ctx.textAlign="center"; ctx.fillText(t.sub2,cx,y); ctx.textAlign="left";
+  y+=Math.round(W*0.04); ctx.strokeStyle=t.line; ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
   ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(left,y+4); ctx.lineTo(right,y+4); ctx.stroke();
-
-  // ---- footer ----
-  let fy=H-m*1.15;
-  ctx.strokeStyle=POSTER_LINE; ctx.lineWidth=1.4;
-  ctx.beginPath(); ctx.moveTo(left,fy); ctx.lineTo(right,fy); ctx.stroke();
-  fy+=Math.round(W*0.032);
-  ctx.fillStyle=POSTER_SUB; ctx.font=`500 ${Math.round(W*0.0135)}px Georgia, serif`;
-  spaced(ctx,"KINSHIP — FAMILY TREE", left, fy, W*0.004, "left");
-  spaced(ctx,`${state.order.length} MEMBERS · ${genCount()} GENERATIONS`, right, fy, W*0.004, "right");
-
-  // ---- tree area ----
-  const areaTop=y+Math.round(H*0.03);
-  const areaBottom=(H-m*1.15)-Math.round(H*0.03);
-  drawTreeInto(ctx, {x:left, y:areaTop, w:cw, h:areaBottom-areaTop});
+  // footer
+  let fy=H-m*1.2; ctx.strokeStyle=t.line; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(left,fy); ctx.lineTo(right,fy); ctx.stroke();
+  fy+=Math.round(W*0.032); ctx.fillStyle=t.sub; ctx.font=`600 ${Math.round(W*0.0135)}px ${t.lat}`;
+  spaced(ctx,"IETSUNAGI",left,fy,W*0.004,"left");
+  spaced(ctx,`${state.order.length} MEMBERS · ${genCount()} GEN.`,right,fy,W*0.004,"right");
+  // tree
+  const areaTop=y+Math.round(H*0.03), areaBottom=(H-m*1.2)-Math.round(H*0.03);
+  drawTreeInto(ctx,{x:left,y:areaTop,w:cw,h:areaBottom-areaTop},t);
 }
 
 function svgToImage(svg,px){
   return new Promise((res,rej)=>{
-    const img=new Image();
-    img.onload=()=>res(img); img.onerror=rej;
+    const img=new Image(); img.onload=()=>res(img); img.onerror=rej;
     const sized=svg.replace('width="100%" height="100%"','width="'+px+'" height="'+px+'"');
     img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(sized);
   });
 }
+let _exportTheme="modern";
 async function makePoster(W,H){
   try{ if(document.fonts){ await document.fonts.ready;
-    await Promise.all([
-      document.fonts.load("700 80px 'Shippori Mincho'"),
-      document.fonts.load("600 20px 'Shippori Mincho'"),
-      document.fonts.load("400 14px 'Noto Sans JP'"),
-    ]); } }catch(e){}
-  let crestImg=null;
-  const sur=dominantSurname();
-  const csvg=sur?crestSVG(sur, POSTER_ACCENT):"";
-  if(csvg){ try{ crestImg=await svgToImage(csvg, 260); }catch(e){} }
+    await Promise.all([document.fonts.load("700 80px 'Noto Serif JP'"),document.fonts.load("700 80px 'Shippori Mincho'"),document.fonts.load("600 20px 'Noto Sans JP'")]); } }catch(e){}
+  const t=getTheme(_exportTheme);
+  let crestImg=null; const sur=dominantSurname();
+  const csvg=sur?crestSVG(sur,t.accent):"";
+  if(csvg){ try{ crestImg=await svgToImage(csvg,260); }catch(e){} }
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
-  drawPoster(cv.getContext("2d"),W,H,crestImg);
+  drawPoster(cv.getContext("2d"),W,H,crestImg,t);
   return cv;
 }
 
@@ -2180,8 +2174,15 @@ function downloadBlob(blob,name){
   const a=el("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 }
+function buildThemeRow(){
+  const row=$("#themeRow"); if(row.children.length) { [...row.children].forEach(c=>c.classList.toggle("active",c.dataset.id===_exportTheme)); return; }
+  THEMES.forEach(t=>{ const b=el("button","theme-chip"+(t.id===_exportTheme?" active":"")); b.textContent=t.name; b.dataset.id=t.id;
+    b.addEventListener("click",()=>{ _exportTheme=t.id; [...row.children].forEach(c=>c.classList.toggle("active",c===b)); refreshPreview(); });
+    row.appendChild(b); });
+}
 function openExport(){
   if(!state.order.length){ toast("先に家系図をつくってください"); return; }
+  buildThemeRow();
   openOverlay($("#exportOverlay"));
   setTimeout(refreshPreview,80);
 }

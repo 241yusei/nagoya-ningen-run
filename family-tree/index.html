@@ -679,13 +679,36 @@ header.topbar{
     <div class="bd">
       <p class="share-lead">このリンクを送ると、相手も同じ家系図を見られます。<b>相手の画面で人を追加・編集</b>することもできます。</p>
       <p class="share-lead" style="color:var(--sub);font-size:13.5px;">追加してもらったら、相手に「共有」から新しいリンクを作ってもらい、それを開けば最新の内容を取り込めます。</p>
-      <label class="check" style="margin:4px 0 12px;"><input type="checkbox" id="sharePrivacy" checked> 生年・没年・メモを含めない（プライバシー保護・おすすめ）</label>
+      <label class="check" style="margin:4px 0 10px;"><input type="checkbox" id="sharePrivacy" checked> 生年・没年・メモを含めない（プライバシー保護・おすすめ）</label>
+      <label class="check" style="margin:0 0 10px;"><input type="checkbox" id="sharePass"> パスワードで保護する（暗号化）</label>
+      <div class="field" id="sharePassWrap" hidden style="margin-bottom:12px;">
+        <input type="text" id="sharePassInput" autocomplete="off" placeholder="合言葉（例：やまだ家2026）">
+        <p class="share-note" style="margin-top:8px;">相手にこの<b>パスワードを別途</b>伝えてください。パスワードがないと開けません（端末内で暗号化）。</p>
+      </div>
       <div class="linkbox">
         <input id="shareLink" readonly value="">
         <button class="btn accent" id="copyLink">コピー</button>
       </div>
       <button class="btn" id="nativeShare" style="width:100%;justify-content:center;padding:13px;">送る（LINE・メールなど）</button>
-      <div class="share-note">※ データはリンクの中に含めて共有します（サーバーには保存・公開されません）。リンクには家族の個人情報が入るため、<b>信頼できる相手にだけ</b>送ってください。ご家族の情報は同意を得て登録しましょう。</div>
+      <div class="share-note">※ データはリンクの中に含めて共有します（サーバーには保存・公開されません）。リンクには家族の個人情報が入るため、<b>信頼できる相手にだけ</b>送ってください。より安全に渡すには「パスワードで保護」を。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Password prompt (for protected links) ========== -->
+<div class="overlay" id="pwOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" style="max-width:420px;">
+    <div class="hd"><h2>保護された家系図</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <p class="share-lead">この家系図はパスワードで保護されています。共有してくれた方から教わった<b>合言葉</b>を入力してください。</p>
+      <div class="field" style="margin:10px 0 4px;">
+        <input type="password" id="pwInput" autocomplete="off" placeholder="パスワード">
+      </div>
+      <p id="pwError" class="share-note" hidden style="background:#fbeaea;color:#a33;">パスワードが違うようです。もう一度お試しください。</p>
+      <div class="form-actions">
+        <button type="button" class="btn" data-close>あとで</button>
+        <button type="button" class="btn accent" id="pwSubmit">ひらく</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1752,53 +1775,101 @@ $("#menuPrivacy").addEventListener("click",()=>{ closeOverlay($("#menuOverlay"))
    ========================================================= */
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob(b64))); }
-function shareURL(privacy){
-  let out=state;
-  if(privacy){ // データ最小化：生年・没年・メモを省く
-    const persons={};
-    for(const id in state.persons){ const p=state.persons[id]; persons[id]=Object.assign({},p,{birth:"",death:"",note:""}); }
-    out={persons,order:state.order,crests:state.crests,version:SCHEMA};
-  }
-  const payload=b64encode(JSON.stringify(out));
-  return location.origin + location.pathname + "#t=" + payload;
+function bytesToB64(bytes){ let s=""; const CH=0x8000; for(let i=0;i<bytes.length;i+=CH) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH)); return btoa(s); }
+function b64ToBytes(b64){ const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i); return u; }
+function exportState(privacy){
+  if(!privacy) return { persons:state.persons, order:state.order, crests:state.crests, version:SCHEMA };
+  const persons={};
+  for(const id in state.persons){ const p=state.persons[id]; persons[id]=Object.assign({},p,{birth:"",death:"",note:""}); }
+  return { persons, order:state.order, crests:state.crests, version:SCHEMA };
 }
-function refreshShareLink(){ $("#shareLink").value=shareURL($("#sharePrivacy").checked); }
+function shareURL(privacy){
+  return location.origin + location.pathname + "#t=" + b64encode(JSON.stringify(exportState(privacy)));
+}
+/* ---- パスワード保護（Web Crypto: PBKDF2 + AES-GCM）---- */
+async function deriveKey(pass, salt, usage){
+  const km=await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, km, {name:"AES-GCM", length:256}, false, [usage]);
+}
+async function encryptShare(privacy, pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass, salt, "encrypt");
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(JSON.stringify(exportState(privacy)))));
+  const blob=new Uint8Array(16+12+ct.length); blob.set(salt,0); blob.set(iv,16); blob.set(ct,28);
+  return location.origin + location.pathname + "#e=" + encodeURIComponent(bytesToB64(blob));
+}
+async function decryptShare(b64, pass){
+  const blob=b64ToBytes(decodeURIComponent(b64));
+  const salt=blob.slice(0,16), iv=blob.slice(16,28), ct=blob.slice(28);
+  const key=await deriveKey(pass, salt, "decrypt");
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function refreshShareLink(){
+  const privacy=$("#sharePrivacy").checked;
+  const prot=$("#sharePass").checked;
+  const pw=$("#sharePassInput").value;
+  $("#sharePassWrap").hidden=!prot;
+  if(prot){
+    if(!pw){ $("#shareLink").value=""; $("#shareLink").placeholder="パスワードを入力するとリンクができます"; return; }
+    try{ $("#shareLink").value=await encryptShare(privacy, pw); }catch(e){ toast("リンク生成に失敗しました"); }
+  } else {
+    $("#shareLink").value=shareURL(privacy);
+  }
+}
 function openShare(){
   if(!state.order.length){ toast("先に家系図をつくってください"); return; }
   refreshShareLink();
   openOverlay($("#shareOverlay"));
 }
 $("#sharePrivacy").addEventListener("change",refreshShareLink);
+$("#sharePass").addEventListener("change",refreshShareLink);
+$("#sharePassInput").addEventListener("input",refreshShareLink);
 $("#btnShare").addEventListener("click",openShare);
 $("#menuShare").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openShare(); });
 $("#copyLink").addEventListener("click",async ()=>{
   const url=$("#shareLink").value;
+  if(!url){ toast("先にパスワードを入力してください"); return; }
   try{ await navigator.clipboard.writeText(url); toast("リンクをコピーしました"); }
   catch(e){ const i=$("#shareLink"); i.focus(); i.select(); try{document.execCommand("copy");toast("リンクをコピーしました");}catch(_){toast("コピーできませんでした");} }
 });
 $("#nativeShare").addEventListener("click",async ()=>{
-  const url=$("#shareLink").value;
-  if(navigator.share){ try{ await navigator.share({title:"家系図", text:"家系図を共有します。あなたも追加・編集できます。", url}); }catch(e){} }
-  else { $("#copyLink").click(); toast("リンクをコピーしました。貼り付けて送ってください"); }
+  const url=$("#shareLink").value; if(!url){ toast("先にパスワードを入力してください"); return; }
+  if(navigator.share){ try{ await navigator.share({title:"いえつなぎ", text:"家系図を共有します。", url}); }catch(e){} }
+  else { $("#copyLink").click(); }
 });
-/* load a tree from the URL hash (#t=...) when arriving via a shared link */
+/* 共有リンク（#t= 平文／#e= 暗号）からの読み込み */
+function applyLoadedTree(d, msg){
+  snapshot();
+  state=migrate(d); filterSurname=null; save();
+  history.replaceState(null,"",location.pathname);
+  render(); fitToScreen(); showBanner(msg||"共有された家系図を表示中です。あなたも追加・編集できます。");
+}
+let _encPayload=null;
 function loadFromHash(){
   const h=location.hash||"";
-  if(!h.startsWith("#t=")) return false;
-  try{
-    const d=JSON.parse(b64decode(h.slice(3)));
-    if(d && d.persons){
-      snapshot();                  // 今のデータを退避（戻れるように）
-      state=d; if(!state.order) state.order=Object.keys(d.persons); if(!state.crests) state.crests={};
-      filterSurname=null; save();
-      history.replaceState(null,"",location.pathname);  // URLをきれいに
-      render(); fitToScreen();
-      showBanner("共有された家系図を表示中です。あなたも追加・編集できます。");
-      return true;
-    }
-  }catch(e){}
+  if(h.startsWith("#t=")){
+    try{ const d=JSON.parse(b64decode(h.slice(3))); if(d&&d.persons){ applyLoadedTree(d); return true; } }catch(e){}
+    return false;
+  }
+  if(h.startsWith("#e=")){
+    _encPayload=h.slice(3);
+    history.replaceState(null,"",location.pathname);
+    setTimeout(()=>{ $("#pwError").hidden=true; $("#pwInput").value=""; openOverlay($("#pwOverlay")); setTimeout(()=>$("#pwInput").focus(),300); },150);
+    return false; // ローカルデータは背後に表示。解錠で差し替え
+  }
   return false;
 }
+$("#pwSubmit").addEventListener("click",async ()=>{
+  const pw=$("#pwInput").value; if(!pw) return;
+  try{
+    const d=await decryptShare(_encPayload, pw);
+    if(d&&d.persons){ closeOverlay($("#pwOverlay")); applyLoadedTree(d, "共有された家系図を表示中です（解錠しました）。"); }
+    else throw 0;
+  }catch(e){ $("#pwError").hidden=false; }
+});
+$("#pwInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pwSubmit").click(); });
 
 /* =========================================================
    EXPORT — magazine-style poster (Canvas) → PNG / PDF

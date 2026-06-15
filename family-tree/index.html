@@ -218,6 +218,18 @@ input[type=range]{accent-color:var(--accent);}
 #empty h2{font-size:clamp(28px,5vw,54px);line-height:1.28;font-weight:600;letter-spacing:.05em;margin:0 0 20px;color:var(--ink);}
 #empty .feat p{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:620px;margin:0;line-height:2.1;}
 #empty .cta{display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
+/* hub feature cards */
+#empty .hub{border-top:1px solid var(--hair);}
+.hubgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:6px;}
+@media(max-width:640px){.hubgrid{grid-template-columns:1fr;}}
+.hubcard{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;
+  background:var(--paper);border:1px solid var(--hair);border-radius:18px;padding:24px 22px;cursor:pointer;
+  font-family:inherit;transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .2s;box-shadow:0 1px 2px rgba(20,20,19,.04);}
+.hubcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--accent-soft);}
+.hubico{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+.hubico svg{width:24px;height:24px;}
+.hubt{font-size:clamp(17px,2.2vw,20px);font-weight:600;color:var(--ink);letter-spacing:.02em;}
+.hubd{font-size:14px;color:var(--sub);line-height:1.7;}
 #empty .foot{color:var(--faint);font-size:12px;padding:30px 7vw 64px;margin:0;letter-spacing:.12em;border-top:1px solid var(--hair);}
 #empty .foot button{display:block;margin-top:8px;}
 .reveal{opacity:0;transform:translateY(26px);transition:opacity 1.1s var(--ease),transform 1.1s var(--ease);}
@@ -421,6 +433,42 @@ input[type=range]{accent-color:var(--accent);}
           <button class="btn accent big" id="emptyStart">つくりはじめる</button>
           <button class="btn link big" id="emptySample">見本を見る</button>
           <button class="btn link" id="emptyGuide">使い方</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="feat hub">
+      <div class="wrap reveal">
+        <p class="idx"><span>—</span> できること ／ Features</p>
+        <div class="hubgrid">
+          <button class="hubcard" data-feat="tree">
+            <span class="hubico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="3" width="6" height="4.5" rx="1.2"/><rect x="3.5" y="16.5" width="6" height="4.5" rx="1.2"/><rect x="14.5" y="16.5" width="6" height="4.5" rx="1.2"/><path d="M12 7.5v4.5M6.5 16.5v-2.5h11v2.5M12 12v2"/></svg>
+            </span>
+            <span class="hubt">家系図をつくる</span>
+            <span class="hubd">名前を入れるだけ。自動でバランスよく整います。</span>
+          </button>
+          <button class="hubcard" data-feat="crest">
+            <span class="hubico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 5.5l1.6 3.4 3.7.4-2.8 2.5.8 3.6L12 13.9 8.7 15.9l.8-3.6-2.8-2.5 3.7-.4z"/></svg>
+            </span>
+            <span class="hubt">家紋を選ぶ・つくる</span>
+            <span class="hubd">数百種から選ぶ／自分だけの家紋を作る。</span>
+          </button>
+          <button class="hubcard" data-feat="story">
+            <span class="hubico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2.4"/><circle cx="12" cy="9.5" r="2.4"/><path d="M7.5 18c1.4-2.6 7.6-2.6 9 0"/></svg>
+            </span>
+            <span class="hubt">物語の一枚にする</span>
+            <span class="hubd">家柄・年代のデザインでストーリーズ画像やPDFに。</span>
+          </button>
+          <button class="hubcard" data-feat="share">
+            <span class="hubico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2.5"/></svg>
+            </span>
+            <span class="hubt">安全に共有する</span>
+            <span class="hubd">パスワードで保護したリンクで、家族とだけ。</span>
+          </button>
         </div>
       </div>
     </section>
@@ -1831,6 +1879,16 @@ $("#emptySample").addEventListener("click",loadSample);
 document.querySelectorAll('#empty [data-action]').forEach(b=>{
   const a=b.dataset.action;
   b.addEventListener("click",()=>{ if(a==="start") openForm({}); else if(a==="sample") loadSample(); else if(a==="guide") openOverlay($("#guideOverlay")); });
+});
+document.querySelectorAll('#empty .hubcard').forEach(b=>{
+  const f=b.dataset.feat;
+  b.addEventListener("click",()=>{
+    if(f==="tree"){ openForm({}); return; }
+    if(!state.order.length){ toast("まずは最初のひとりから始めましょう"); openForm({}); return; }
+    if(f==="crest") openCraft(dominantSurname());
+    else if(f==="story") openExport();
+    else if(f==="share") openShare();
+  });
 });
 // don't let the landing page's scroll trigger canvas dragging
 empty.addEventListener("pointerdown",e=>e.stopPropagation());

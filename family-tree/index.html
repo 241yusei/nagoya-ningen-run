@@ -166,6 +166,16 @@ header.topbar{
 .crest-opt svg{display:block;width:100%;height:100%;}
 .crest-opt.none-opt .none-label{font-size:12px;color:var(--sub);text-align:center;line-height:1.4;font-weight:600;}
 .crest-cap{font-size:13px;color:var(--sub);margin:0 0 14px;line-height:1.7;}
+/* crest creator */
+.craft-preview{display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--hair);border-radius:16px;padding:22px;margin-bottom:16px;}
+.craft-preview #craftPreview{width:160px;height:160px;color:var(--ink);}
+.craft-preview #craftPreview svg{display:block;width:100%;height:100%;}
+.craft-controls .field{margin-bottom:14px;}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid var(--hair);cursor:pointer;padding:0;transition:.15s var(--ease);}
+.swatches button:hover{transform:scale(1.08);}
+.swatches button.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink);}
+input[type=range]{accent-color:var(--accent);}
 /* the quick add buttons on hover（PC） */
 .card .quick{position:absolute;inset:auto 0 0 0;display:flex;gap:4px;justify-content:center;
   background:linear-gradient(0deg,var(--paper) 55%,rgba(255,255,255,0));
@@ -612,9 +622,42 @@ header.topbar{
     <div class="hd"><h2 id="crestTitle">家紋を選ぶ</h2><button class="x" data-close>×</button></div>
     <div class="bd">
       <p class="crest-cap" id="crestCap">現存する家紋の体系を学び、家紋デザイナー・画家・現代アーティストの視点で起こしたオリジナルです。歴史ある趣から現代的なものまで、お好きな一つを選べます（既定は「家紋なし」）。</p>
+      <button class="btn accent" id="openCraft" style="width:100%;justify-content:center;padding:13px;margin-bottom:14px;">✦ 自分だけの家紋をつくる</button>
       <div class="crest-tabs" id="crestTabs"></div>
       <p class="crest-count" id="crestCount"></p>
       <div class="crest-grid" id="crestGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Crest creator (家紋をつくる) ========== -->
+<div class="overlay" id="craftOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" style="max-width:560px;">
+    <div class="hd"><h2>家紋をつくる</h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <div class="craft-preview"><div id="craftPreview"></div></div>
+      <div class="craft-controls">
+        <div class="field"><label>家（苗字）</label><select id="craftSurname"></select></div>
+        <div class="row2">
+          <div class="field"><label>モチーフ</label><select id="craftMotif"></select></div>
+          <div class="field"><label>外周</label><select id="craftEnc"></select></div>
+        </div>
+        <div class="field"><label>作風</label>
+          <div class="seg" id="craftStyle">
+            <label><input type="radio" name="cstyle" value="solid" checked><span>伝統</span></label>
+            <label><input type="radio" name="cstyle" value="kage"><span>細線</span></label>
+            <label><input type="radio" name="cstyle" value="modern"><span>現代</span></label>
+          </div>
+        </div>
+        <div class="field"><label>色</label><div class="swatches" id="craftColors"></div></div>
+        <div class="field"><label>回転 <span class="hint" id="craftRotVal">0°</span></label>
+          <input type="range" id="craftRot" min="0" max="345" step="15" value="0" style="width:100%;">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" id="craftRandom">ランダム</button>
+        <button type="button" class="btn accent" id="craftApply">この家に設定する</button>
+      </div>
     </div>
   </div>
 </div>
@@ -660,7 +703,8 @@ header.topbar{
     <div class="bd">
       <div class="acts" style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn" id="menuShare" style="justify-content:flex-start;padding:14px;">家系図を共有する</button>
-        <button class="btn" id="menuPoster" style="justify-content:flex-start;padding:14px;">画像・PDFにする（雑誌風）</button>
+        <button class="btn" id="menuCraft" style="justify-content:flex-start;padding:14px;">家紋をつくる</button>
+        <button class="btn" id="menuPoster" style="justify-content:flex-start;padding:14px;">画像・PDFにする</button>
         <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
         <button class="btn" id="menuExport" style="justify-content:flex-start;padding:14px;">データを書き出す（バックアップ）</button>
         <button class="btn" id="menuImport" style="justify-content:flex-start;padding:14px;">データを読み込む</button>
@@ -883,7 +927,7 @@ function _motifGroup(d){
 }
 function crestSVGFromDesc(d,color){
   if(!d || d.none) return "";
-  const c=color||"currentColor";
+  const c=color||d.color||"currentColor";
   const motif=_motifGroup(d);
   if(d.style==="kage"){   // 陰紋（細線）
     return `<svg viewBox="0 0 100 100" width="100%" height="100%" color="${c}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true">${ENC[d.e]()}${motif}</svg>`;
@@ -942,6 +986,58 @@ function renderCrestGrid(){
   }
   $("#crestCount").textContent=cat.length+"種から選べます";
 }
+
+/* ---------- 家紋をつくる（クラフト） ---------- */
+const MOTIF_LABEL={umebachi:"梅鉢",plum:"梅",sakura:"桜",kiku:"菊",hanabishi:"花菱",katabami:"片喰",kuyou:"九曜",ken:"剣花",ya:"矢",igeta:"井桁",ougi:"扇",mokkou:"木瓜",tomoe:"三つ巴",wachigai:"輪違い",meyui:"目結",hikiryo:"三つ引",masu:"枡",uroko:"鱗",kuginuki:"釘抜",concentric:"同心円",dotgrid:"点格子",crescent:"月",nami:"波"};
+const ENC_LABEL={none:"なし",maru:"丸",futae:"二重丸",futomaru:"太丸",kaku:"角",kikkou:"亀甲",hishiwa:"菱輪",renju:"連珠"};
+const CRAFT_COLORS=[{n:"墨",v:"#16140F"},{n:"藍",v:"#28415B"},{n:"朱",v:"#B3412C"},{n:"クレイ",v:"#D97757"},{n:"金茶",v:"#9B7B3B"},{n:"緑青",v:"#3F6F52"},{n:"紫",v:"#5B4B78"},{n:"鼠",v:"#8C8678"}];
+let _craft={m:"hanabishi",e:"maru",style:"solid",rot:0,color:"#16140F"};
+function craftPreview(){ $("#craftPreview").innerHTML=crestSVGFromDesc(_craft, _craft.color); }
+function openCraft(surname){
+  // selects
+  const ms=$("#craftMotif"); if(!ms.options.length){ ms.innerHTML=MOTIF_NAMES.map(m=>`<option value="${m}">${MOTIF_LABEL[m]||m}</option>`).join(""); }
+  const es=$("#craftEnc"); if(!es.options.length){ es.innerHTML=ENC_NAMES.map(e=>`<option value="${e}">${ENC_LABEL[e]||e}</option>`).join(""); }
+  const cs=$("#craftColors"); if(!cs.children.length){ CRAFT_COLORS.forEach(c=>{ const b=el("button"); b.style.background=c.v; b.dataset.v=c.v; b.title=c.n; b.setAttribute("aria-label",c.n);
+    b.addEventListener("click",()=>{ _craft.color=c.v; [...cs.children].forEach(x=>x.classList.toggle("sel",x===b)); craftPreview(); }); cs.appendChild(b); }); }
+  // surname select
+  const ss=$("#craftSurname"); const surs=surnameList();
+  ss.innerHTML = surs.length? surs.map(s=>`<option value="${esc(s)}">${esc(s)}家</option>`).join("") : `<option value="">（苗字のある人がいません）</option>`;
+  if(surname && surs.includes(surname)) ss.value=surname;
+  $("#craftApply").disabled = !surs.length;
+  // seed from current chosen crest if any
+  const cur = ss.value && chosenDesc(ss.value);
+  if(cur){ _craft={m:cur.m,e:cur.e,style:cur.style,rot:cur.rot||0,color:cur.color||"#16140F"}; }
+  ms.value=_craft.m; es.value=_craft.e;
+  const sr=document.querySelector('input[name=cstyle][value="'+_craft.style+'"]'); if(sr) sr.checked=true;
+  $("#craftRot").value=_craft.rot; $("#craftRotVal").textContent=_craft.rot+"°";
+  [...$("#craftColors").children].forEach(x=>x.classList.toggle("sel",x.dataset.v===_craft.color));
+  craftPreview();
+  openOverlay($("#craftOverlay"));
+}
+$("#craftMotif").addEventListener("change",e=>{ _craft.m=e.target.value; craftPreview(); });
+$("#craftEnc").addEventListener("change",e=>{ _craft.e=e.target.value; craftPreview(); });
+document.querySelectorAll('input[name=cstyle]').forEach(r=>r.addEventListener("change",e=>{ _craft.style=e.target.value; craftPreview(); }));
+$("#craftRot").addEventListener("input",e=>{ _craft.rot=+e.target.value; $("#craftRotVal").textContent=_craft.rot+"°"; craftPreview(); });
+$("#craftRandom").addEventListener("click",()=>{
+  _craft.m=MOTIF_NAMES[Math.floor(Math.random()*MOTIF_NAMES.length)];
+  _craft.e=ENC_NAMES[Math.floor(Math.random()*ENC_NAMES.length)];
+  _craft.style=["solid","kage","modern"][Math.floor(Math.random()*3)];
+  _craft.rot=[0,15,30,45][Math.floor(Math.random()*4)];
+  _craft.color=CRAFT_COLORS[Math.floor(Math.random()*CRAFT_COLORS.length)].v;
+  $("#craftMotif").value=_craft.m; $("#craftEnc").value=_craft.e;
+  const sr=document.querySelector('input[name=cstyle][value="'+_craft.style+'"]'); if(sr) sr.checked=true;
+  $("#craftRot").value=_craft.rot; $("#craftRotVal").textContent=_craft.rot+"°";
+  [...$("#craftColors").children].forEach(x=>x.classList.toggle("sel",x.dataset.v===_craft.color));
+  craftPreview();
+});
+$("#craftApply").addEventListener("click",()=>{
+  const sur=$("#craftSurname").value; if(!sur){ toast("先に苗字のある人を登録してください"); return; }
+  if(!state.crests) state.crests={};
+  state.crests[sur]={m:_craft.m,e:_craft.e,style:_craft.style,rot:_craft.rot,color:_craft.color};
+  save(); render(); closeOverlay($("#craftOverlay")); closeOverlay($("#crestOverlay")); toast("「"+sur+"」家の家紋を作りました ✦");
+});
+$("#openCraft").addEventListener("click",()=>openCraft(_crestSurname));
+
 function link(aId,bId,field){
   const a=state.persons[aId], b=state.persons[bId];
   if(a && !a[field].includes(bId)) a[field].push(bId);
@@ -2097,6 +2193,7 @@ async function refreshPreview(){
   const c=pv.getContext("2d"); c.drawImage(poster,0,0,pv.width,pv.height);
 }
 $("#menuPoster").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openExport(); });
+$("#menuCraft").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openCraft(dominantSurname()); });
 $("#expStory").addEventListener("click",async ()=>{
   const cv=await makePoster(1080,1920);
   cv.toBlob(b=>{ downloadBlob(b,"family-tree-story.png"); toast("ストーリーズ用の画像を保存しました"); },"image/png");

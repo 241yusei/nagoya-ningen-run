@@ -1924,6 +1924,14 @@ stage.addEventListener("wheel",e=>{
   view.y = my - (my-view.y)*(nk/old);
   view.k=nk; applyView();
 },{passive:false});
+// ダブルクリック／ダブルタップで、その位置へズーム
+stage.addEventListener("dblclick",e=>{
+  if(e.target.closest(".card")||e.target.closest("#empty")) return;
+  const rect=stage.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const old=view.k, nk=clampK(view.k<1.1?1.6:0.6);
+  animateView(mx-(mx-view.x)*(nk/old), my-(my-view.y)*(nk/old), nk);
+});
 
 // pinch zoom
 let pinch=null;
@@ -1958,24 +1966,31 @@ function zoomBy(f){
   view.x = mx-(mx-view.x)*(nk/old); view.y=my-(my-view.y)*(nk/old);
   view.k=nk; applyView();
 }
+function viewInsets(){
+  const ts=document.getElementById("topstack");
+  const top=(ts && ts.getBoundingClientRect().height? ts.getBoundingClientRect().height:0)+16;
+  return { top, bottom:84, side:24 };
+}
 function fitToScreen(){
   if(!state.order.length) return;
-  const L=buildLayout(getVis());
-  const rect=stage.getBoundingClientRect();
-  const k=clampK(Math.min((rect.width-60)/L.width, (rect.height-60)/L.height, 1.4));
-  view.k=k;
-  view.x=(rect.width - L.width*k)/2;
-  view.y=Math.max(20,(rect.height - L.height*k)/2);
-  animateView();
+  const L=buildLayout(getVis()); if(!L.width) return;
+  const rect=stage.getBoundingClientRect(); const ins=viewInsets();
+  const availW=Math.max(140, rect.width-ins.side*2);
+  const availH=Math.max(140, rect.height-ins.top-ins.bottom);
+  const k=clampK(Math.min(availW/L.width, availH/L.height, 1.6));
+  const tx=(rect.width-L.width*k)/2;
+  const ty=ins.top+(availH-L.height*k)/2;
+  animateView(tx,ty,k);
 }
 
-/* smooth focus on a specific node */
+/* smooth focus on a specific node（フィルタ帯の下に収める） */
 function focusOnNode(id, gentle){
   const L=buildLayout(getVis()); const r=L.rects[id]; if(!r) return;
-  const rect=stage.getBoundingClientRect();
-  const targetK = gentle? clampK(Math.max(view.k,0.8)) : view.k;
+  const rect=stage.getBoundingClientRect(); const ins=viewInsets();
+  const targetK = gentle? clampK(Math.max(view.k,0.85)) : view.k;
+  const availH=Math.max(140, rect.height-ins.top-ins.bottom);
   const tx = rect.width/2 - r.cx*targetK;
-  const ty = rect.height*0.42 - r.cy*targetK;
+  const ty = ins.top + availH*0.42 - r.cy*targetK;
   animateView(tx,ty,targetK);
 }
 let rafView=null;

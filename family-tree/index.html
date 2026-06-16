@@ -715,6 +715,7 @@ input[type=range]{accent-color:var(--accent);}
     <div class="bd">
       <p class="crest-cap" id="crestCap">現存する家紋の体系を学び、家紋デザイナー・画家・現代アーティストの視点で起こしたオリジナルです。歴史ある趣から現代的なものまで、お好きな一つを選べます（既定は「家紋なし」）。</p>
       <button class="btn accent" id="openCraft" style="width:100%;justify-content:center;padding:13px;margin-bottom:14px;">✦ 自分だけの家紋をつくる</button>
+      <div class="crest-tabs" id="crestCats"></div>
       <div class="crest-tabs" id="crestTabs"></div>
       <p class="crest-count" id="crestCount"></p>
       <div class="crest-grid" id="crestGrid"></div>
@@ -975,6 +976,10 @@ function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.im
 const _f=n=>(+n).toFixed(1);
 const _circ=(cx,cy,r)=>`<circle cx="${_f(cx)}" cy="${_f(cy)}" r="${_f(r)}"/>`;
 const _rep=(k,unit,rot)=>{ let s=`<g transform="rotate(${rot||0} 50 50)">`; for(let i=0;i<k;i++) s+=`<g transform="rotate(${(360/k*i).toFixed(2)} 50 50)">${unit}</g>`; return s+'</g>'; };
+const _pts=a=>a.map(p=>_f(p[0])+','+_f(p[1])).join(' ');
+const _poly=a=>`<polygon points="${_pts(a)}"/>`;
+const _regPts=(cx,cy,n,r,rot)=>{ const p=[]; for(let i=0;i<n;i++){ const a=((rot==null?-90:rot)+i*360/n)*Math.PI/180; p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]); } return p; };
+const _starPts=(cx,cy,n,ro,ri,rot)=>{ const p=[]; for(let i=0;i<2*n;i++){ const a=((rot==null?-90:rot)+i*180/n)*Math.PI/180, r=i%2?ri:ro; p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]); } return p; };
 const MOTIF={
   umebachi:()=>_rep(5,_circ(50,24,8))+_circ(50,50,8),                                                          // 梅鉢
   plum:()=>_rep(5,`<ellipse cx="50" cy="25" rx="7.5" ry="12"/>`)+_circ(50,50,6.5),                              // 梅
@@ -999,6 +1004,31 @@ const MOTIF={
   dotgrid:()=>{ let s=""; for(let r=0;r<3;r++)for(let c=0;c<3;c++) s+=_circ(34+c*16,34+r*16,5); return s; },     // 点格子（現代）
   crescent:()=>`<path d="M58 18 A32 32 0 1 0 58 82 A24 24 0 1 1 58 18 Z"/>`,                                     // 月
   nami:()=>`<path d="M16 58 Q33 38 50 58 T84 58" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><path d="M16 44 Q33 24 50 44 T84 44" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`, // 波
+  /* ---- 世界の意匠 / 幾何（このアプリ独自に再構成） ---- */
+  shippou:()=>`<g fill="none" stroke="currentColor" stroke-width="4">`+_rep(4,`<circle cx="50" cy="34" r="16"/>`)+`</g>`,                         // 七宝
+  bishamon:()=>`<g fill="none" stroke="currentColor" stroke-width="3.6">`+`<polygon points="${_pts(_regPts(50,37,6,15,-90))}"/><polygon points="${_pts(_regPts(40,57,6,15,-90))}"/><polygon points="${_pts(_regPts(60,57,6,15,-90))}"/>`+`</g>`, // 毘沙門亀甲
+  mullet:()=>_poly(_starPts(50,50,5,34,14)),                                                                                                  // 星章（五芒）
+  hexagram:()=>`<g fill="none" stroke="currentColor" stroke-width="4">`+_poly(_regPts(50,50,3,33,-90))+_poly(_regPts(50,50,3,33,90))+`</g>`,    // 六芒
+  khatim:()=>`<g fill="none" stroke="currentColor" stroke-width="3.6">`+_poly(_regPts(50,50,4,34,-90))+_poly(_regPts(50,50,4,34,-45))+`</g>`,   // 八芒（イスラム星）
+  star12:()=>_poly(_starPts(50,50,12,36,20)),                                                                                                 // 十二光星
+  sunburst:()=>_rep(16,`<polygon points="50,12 52.6,30 47.4,30"/>`)+_circ(50,50,9),                                                          // 旭光
+  gear:()=>_rep(12,`<rect x="48" y="8" width="4" height="9"/>`)+`<circle cx="50" cy="50" r="24" fill="none" stroke="currentColor" stroke-width="6"/>`+_circ(50,50,6), // 歯車
+  compass:()=>`<g fill="none" stroke="currentColor" stroke-width="3">`+_rep(8,`<line x1="50" y1="50" x2="50" y2="12"/>`)+`<circle cx="50" cy="50" r="38"/></g>`+_rep(4,`<polygon points="50,12 54,22 46,22"/>`)+_circ(50,50,5), // 羅針
+  triquetra:()=>`<g fill="none" stroke="currentColor" stroke-width="4">`+_rep(3,`<circle cx="50" cy="36" r="15"/>`)+`</g>`,                       // 三位（ケルト）
+  triskele:()=>_rep(3,`<path d="M50 50 C50 36 59 30 66 35 C72 40 70 51 60 51" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`), // 三脚渦
+  valknut:()=>`<g fill="none" stroke="currentColor" stroke-width="3.2">`+_rep(3,`<polygon points="50,18 65,45 35,45"/>`)+`</g>`, // 三角結（北欧）
+  hexrose:()=>`<g fill="none" stroke="currentColor" stroke-width="3.4">`+_rep(6,`<circle cx="50" cy="36" r="14"/>`)+`<circle cx="50" cy="50" r="14"/></g>`, // 花の輪
+  quatrefoil:()=>_rep(4,`<circle cx="50" cy="33" r="13"/>`),                                                                                  // 四つ葉（建築紋）
+  trefoil:()=>_rep(3,`<circle cx="50" cy="33" r="13"/>`)+`<rect x="48" y="50" width="4" height="14"/>`,                                       // 三つ葉
+  cinquefoil:()=>_rep(5,`<circle cx="50" cy="32" r="10"/>`)+_circ(50,50,6),                                                                  // 五つ葉
+  fleurdelis:()=>`<path d="M50 12 C45 24 38 26 39 33 C40 39 47 39 50 33 C53 39 60 39 61 33 C62 26 55 24 50 12 Z"/><path d="M50 30 C47 38 45 46 45 54 C45 64 50 72 50 72 C50 72 55 64 55 54 C55 46 53 38 50 30 Z"/><path d="M38 42 C31 46 30 56 37 62 C42 58 43 49 38 42 Z"/><path d="M62 42 C69 46 70 56 63 62 C58 58 57 49 62 42 Z"/><rect x="38" y="48" width="24" height="5" rx="2.5"/>`, // 百合（仏）
+  crosspatty:()=>`<path d="M50 10 L60 26 L54 26 L54 44 L74 44 L74 38 L90 50 L74 62 L74 56 L54 56 L54 74 L60 74 L50 90 L40 74 L46 74 L46 56 L26 56 L26 62 L10 50 L26 38 L26 44 L46 44 L46 26 L40 26 Z"/>`, // クロス・パテ
+  chevron:()=>`<path d="M12 66 L50 30 L88 66 L78 66 L50 42 L22 66 Z"/><path d="M12 80 L50 44 L88 80 L78 80 L50 56 L22 80 Z" opacity="0.55"/>`, // 山形（シェブロン）
+  lotus:()=>_rep(8,`<path d="M50 18 Q57 34 50 50 Q43 34 50 18 Z"/>`)+_rep(8,`<path d="M50 28 Q55 39 50 50 Q45 39 50 28 Z"/>`,22.5)+_circ(50,50,6), // 蓮（印）
+  mandala:()=>`<g fill="none" stroke="currentColor" stroke-width="3">`+_rep(12,`<circle cx="50" cy="22" r="5"/>`)+`<circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="18"/></g>`+_circ(50,50,5), // 曼荼羅
+  aztec:()=>`<path d="M28 28 H72 V72 H40 V40 H60 V60 H46 V46 H54" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter"/>`, // 雷文渦（メソアメリカ）
+  lozenge:()=>{ let s=""; const pos=[[50,26],[34,50],[66,50],[50,74],[50,50]]; for(const[x,y]of pos) s+=_poly([[x,y-10],[x+8,y],[x,y+10],[x-8,y]]); return s; }, // 菱の集（ロザンジュ）
+  paisley:()=>_rep(3,`<path d="M50 50 C50 33 60 27 67 33 C74 39 71 50 61 51 C55 51.5 52 49 53 45 C54 42 59 43 59 46" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>`), // 勾玉/ペイズリー
 };
 const MOTIF_NAMES=Object.keys(MOTIF);
 const ENC={
@@ -1010,6 +1040,9 @@ const ENC={
   kikkou:()=>{ let p=[]; for(let i=0;i<6;i++){ const a=(-90+i*60)*Math.PI/180; p.push(_f(50+47*Math.cos(a))+','+_f(50+47*Math.sin(a))); } return `<polygon points="${p.join(' ')}" fill="none" stroke="currentColor" stroke-width="4"/>`; },
   hishiwa:()=>`<polygon points="50,4 96,50 50,96 4,50" fill="none" stroke="currentColor" stroke-width="4"/>`,
   renju:()=>_rep(16,_circ(50,4,2.6))+`<circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="2"/>`,
+  shield:()=>`<path d="M14 12 H86 V46 C86 70 68 84 50 92 C32 84 14 70 14 46 Z" fill="none" stroke="currentColor" stroke-width="4"/>`, // 盾（紋章）
+  oval:()=>`<ellipse cx="50" cy="50" rx="38" ry="46" fill="none" stroke="currentColor" stroke-width="4"/>`,                    // 楕円輪
+  octa:()=>`<polygon points="${_pts(_regPts(50,50,8,47,-67.5))}" fill="none" stroke="currentColor" stroke-width="4"/>`,        // 八角
 };
 const ENC_NAMES=Object.keys(ENC);
 const STYLES=[{id:"solid",label:"伝統紋（陽）"},{id:"kage",label:"細線紋（陰）"},{id:"modern",label:"現代紋"}];
@@ -1032,9 +1065,10 @@ function crestSVGFromDesc(d,color){
   }
   return `<svg viewBox="0 0 100 100" width="100%" height="100%" color="${c}" fill="currentColor" stroke="none" aria-hidden="true">${ENC[d.e]()}${motif}</svg>`;
 }
-function crestCatalog(style){
+function crestCatalog(style,cat){
   const out=[];
   for(const m of MOTIF_NAMES){
+    if(cat&&cat!=="all"&&MOTIF_CAT[m]!==cat) continue;
     if(style==="modern"){ out.push({m,e:"none",style}); out.push({m,e:"kaku",style}); }
     else for(const e of ENC_NAMES) out.push({m,e,style});
   }
@@ -1063,10 +1097,18 @@ let _crestPerson=null, _crestTab="solid";
 function openCrestChooser(pid){
   if(!pid||!state.persons[pid]){ toast("対象が見つかりません"); return; }
   if(!state.crests) state.crests={};
-  _crestPerson=pid; _crestTab="solid";
+  _crestPerson=pid; _crestTab="solid"; _crestCat="all";
   $("#crestTitle").textContent=fullName(state.persons[pid])+" の家紋";
-  buildCrestTabs(); renderCrestGrid();
+  buildCrestCats(); buildCrestTabs(); renderCrestGrid();
   openOverlay($("#crestOverlay"));
+}
+function buildCrestCats(){
+  const t=$("#crestCats"); t.innerHTML="";
+  CATS.forEach(c=>{
+    const b=el("button","crest-tab"+(c.id===_crestCat?" active":"")); b.textContent=c.label;
+    b.addEventListener("click",()=>{ _crestCat=c.id; buildCrestCats(); renderCrestGrid(); });
+    t.appendChild(b);
+  });
 }
 function buildCrestTabs(){
   const t=$("#crestTabs"); t.innerHTML="";
@@ -1084,7 +1126,7 @@ function renderCrestGrid(){
   noneBtn.innerHTML=`<span class="none-label">家紋<br>なし</span>`;
   noneBtn.addEventListener("click",()=>{ delete state.crests[_crestPerson]; save(); render(); closeOverlay($("#crestOverlay")); toast("家紋なしにしました"); });
   grid.appendChild(noneBtn);
-  const cat=crestCatalog(_crestTab);
+  const cat=crestCatalog(_crestTab,_crestCat);
   for(const d of cat){
     const b=el("button","crest-opt");
     b.innerHTML=crestSVGFromDesc(d);
@@ -1096,8 +1138,13 @@ function renderCrestGrid(){
 }
 
 /* ---------- 家紋をつくる（クラフト） ---------- */
-const MOTIF_LABEL={umebachi:"梅鉢",plum:"梅",sakura:"桜",kiku:"菊",hanabishi:"花菱",katabami:"片喰",kuyou:"九曜",ken:"剣花",ya:"矢",igeta:"井桁",ougi:"扇",mokkou:"木瓜",tomoe:"三つ巴",wachigai:"輪違い",meyui:"目結",hikiryo:"三つ引",masu:"枡",uroko:"鱗",kuginuki:"釘抜",concentric:"同心円",dotgrid:"点格子",crescent:"月",nami:"波"};
-const ENC_LABEL={none:"なし",maru:"丸",futae:"二重丸",futomaru:"太丸",kaku:"角",kikkou:"亀甲",hishiwa:"菱輪",renju:"連珠"};
+const MOTIF_LABEL={umebachi:"梅鉢",plum:"梅",sakura:"桜",kiku:"菊",hanabishi:"花菱",katabami:"片喰",kuyou:"九曜",ken:"剣花",ya:"矢",igeta:"井桁",ougi:"扇",mokkou:"木瓜",tomoe:"三つ巴",wachigai:"輪違い",meyui:"目結",hikiryo:"三つ引",masu:"枡",uroko:"鱗",kuginuki:"釘抜",concentric:"同心円",dotgrid:"点格子",crescent:"月",nami:"波",shippou:"七宝",bishamon:"毘沙門亀甲",mullet:"五芒星",hexagram:"六芒星",khatim:"八芒星",star12:"十二光",sunburst:"旭光",gear:"歯車",compass:"羅針",triquetra:"三位輪",triskele:"三脚渦",valknut:"三角結",hexrose:"花の輪",quatrefoil:"四つ葉",trefoil:"三つ葉",cinquefoil:"五つ葉",fleurdelis:"百合",crosspatty:"花十字",chevron:"山形",lotus:"蓮華",mandala:"曼荼羅",aztec:"雷渦",lozenge:"菱集",paisley:"勾玉"};
+const ENC_LABEL={none:"なし",maru:"丸",futae:"二重丸",futomaru:"太丸",kaku:"角",kikkou:"亀甲",hishiwa:"菱輪",renju:"連珠",shield:"盾",oval:"楕円",octa:"八角"};
+const MOTIF_CAT={umebachi:"wa",plum:"wa",sakura:"wa",kiku:"wa",hanabishi:"wa",katabami:"wa",kuyou:"wa",ken:"wa",ya:"wa",igeta:"wa",ougi:"wa",mokkou:"wa",tomoe:"wa",wachigai:"wa",meyui:"wa",hikiryo:"wa",masu:"wa",uroko:"wa",kuginuki:"wa",shippou:"wa",bishamon:"wa",
+  mullet:"world",hexagram:"world",khatim:"world",star12:"world",compass:"world",triquetra:"world",triskele:"world",valknut:"world",hexrose:"world",quatrefoil:"world",trefoil:"world",cinquefoil:"world",fleurdelis:"world",crosspatty:"world",chevron:"world",lotus:"world",mandala:"world",aztec:"world",paisley:"world",
+  concentric:"geo",dotgrid:"geo",crescent:"geo",nami:"geo",sunburst:"geo",gear:"geo",lozenge:"geo"};
+const CATS=[{id:"all",label:"すべて"},{id:"wa",label:"和"},{id:"world",label:"世界"},{id:"geo",label:"幾何"}];
+let _crestCat="all";
 const CRAFT_COLORS=[{n:"墨",v:"#16140F"},{n:"藍",v:"#28415B"},{n:"朱",v:"#B3412C"},{n:"クレイ",v:"#D97757"},{n:"金茶",v:"#9B7B3B"},{n:"緑青",v:"#3F6F52"},{n:"紫",v:"#5B4B78"},{n:"鼠",v:"#8C8678"}];
 let _craft={m:"hanabishi",e:"maru",style:"solid",rot:0,color:"#16140F"};
 function craftPreview(){ $("#craftPreview").innerHTML=crestSVGFromDesc(_craft, _craft.color); }

@@ -336,6 +336,9 @@ input[type=range]{accent-color:var(--accent);}
 .bulk-row .bulk-year{width:84px;flex:none;}
 .bulk-row .bulk-del{width:34px;height:34px;flex:none;border:1px solid var(--hair);background:var(--surface);border-radius:9px;color:var(--sub);cursor:pointer;font-size:16px;line-height:1;}
 .bulk-row .bulk-del:hover{background:#fbeaea;color:#a33;border-color:#e9c9c9;}
+.cloud-status{font-size:13px;color:var(--sub);background:var(--bg2);border-radius:9px;padding:9px 12px;margin:6px 0 2px;font-weight:600;}
+.cloud-status.ok{color:#2e7d32;background:#eaf5ec;}
+.cloud-status.err{color:#a33;background:#fbeaea;}
 .more{margin:2px 0 4px;border-top:1px solid var(--hair);padding-top:10px;}
 .more summary{cursor:pointer;font-size:13px;color:var(--sub);font-weight:600;list-style:none;padding:4px 0;}
 .more summary::-webkit-details-marker{display:none;}
@@ -796,6 +799,7 @@ input[type=range]{accent-color:var(--accent);}
     <div class="bd">
       <div class="acts" style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn" id="menuShare" style="justify-content:flex-start;padding:14px;">家系図を共有する</button>
+        <button class="btn" id="menuCloud" style="justify-content:flex-start;padding:14px;">クラウドで共同編集（β）</button>
         <button class="btn" id="menuCraft" style="justify-content:flex-start;padding:14px;">家紋をつくる</button>
         <button class="btn" id="menuPoster" style="justify-content:flex-start;padding:14px;">画像・PDFにする</button>
         <button class="btn" id="menuSample" style="justify-content:flex-start;padding:14px;">サンプルの家系図を読み込む</button>
@@ -846,6 +850,31 @@ input[type=range]{accent-color:var(--accent);}
         <button type="button" class="btn" data-close>あとで</button>
         <button type="button" class="btn accent" id="pwSubmit">ひらく</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Cloud realtime modal ========== -->
+<div class="overlay" id="cloudOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="hd"><h2>クラウドで共同編集 <span style="font-size:12px;color:var(--accent);">β</span></h2><button class="x" data-close>×</button></div>
+    <div class="bd">
+      <p class="share-lead">同じ「<b>部屋</b>」と「<b>合言葉</b>」を使うと、ご家族みんなで<b>同じ家系図をリアルタイム編集</b>できます。データは端末で<b>暗号化</b>してから保存します。</p>
+      <div class="row2">
+        <div class="field"><label>部屋ID</label><input id="cloudRoom" type="text" autocomplete="off" placeholder="例：fujii-2026-aさ7k"></div>
+        <div class="field"><label>合言葉</label><input id="cloudPass" type="text" autocomplete="off" placeholder="例：ふじい家の合言葉"></div>
+      </div>
+      <details class="more">
+        <summary>はじめての設定（無料Firebase・初回のみ）</summary>
+        <p class="export-hint" style="margin:10px 0;">無料の<b>Firebase</b>でプロジェクトを作り、<b>Realtime Database</b>を有効化、ウェブアプリの<b>config</b>をコピーして下に貼り付けてください（この端末に保存されます）。ルールは読み書き可に。</p>
+        <div class="field"><textarea id="cloudCfg" placeholder='{"apiKey":"...","authDomain":"xxx.firebaseapp.com","databaseURL":"https://xxx-default-rtdb.firebaseio.com","projectId":"xxx","appId":"..."}' style="min-height:96px;font-size:12px;"></textarea></div>
+      </details>
+      <p id="cloudStatus" class="cloud-status">未接続</p>
+      <div class="form-actions">
+        <button type="button" class="btn" id="cloudLeave" hidden>同期をやめる</button>
+        <button type="button" class="btn accent" id="cloudConnect">参加／作成して同期</button>
+      </div>
+      <div class="share-note">⚠ β機能。データはご自身のFirebase上に<b>暗号化</b>して保存されます（合言葉が無いと読めません）。部屋IDは推測されにくい長めの語にしてください。同時に同じ人を編集すると、後の保存が優先されます。</div>
     </div>
   </div>
 </div>
@@ -903,6 +932,7 @@ function save(){
   catch(e){
     if(!_quotaWarned){ _quotaWarned=true; toast("保存できませんでした（容量不足の可能性）。メニューの『書き出し』でバックアップを"); }
   }
+  if(typeof cloud!=="undefined" && cloud.on && !cloud.applying) cloudPush();   // クラウド同期中なら反映
 }
 /* 読み込み時に構造を検証・補正（壊れたデータでも落ちないように） */
 function migrate(d){
@@ -2135,6 +2165,78 @@ async function decryptShare(b64, pass){
   const pt=await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
   return JSON.parse(new TextDecoder().decode(pt));
 }
+/* =========================================================
+   CLOUD（リアルタイム共同編集・β）— Firebase Realtime Database
+   データは端末で暗号化してから保存（合言葉が無いと読めない）
+   ========================================================= */
+async function encObj(obj,pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt,"encrypt");
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(JSON.stringify(obj))));
+  const blob=new Uint8Array(28+ct.length); blob.set(salt,0); blob.set(iv,16); blob.set(ct,28);
+  return bytesToB64(blob);
+}
+async function decObj(b64,pass){
+  const blob=b64ToBytes(b64), salt=blob.slice(0,16), iv=blob.slice(16,28), ct=blob.slice(28);
+  const key=await deriveKey(pass,salt,"decrypt");
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv},key,ct)));
+}
+const cloud={on:false,ref:null,pass:"",cid:Math.random().toString(36).slice(2),lastV:0,applying:false,timer:null,app:null};
+function loadFirebase(){
+  return new Promise((res,rej)=>{
+    if(window.firebase&&window.firebase.database) return res(window.firebase);
+    const add=(src)=>new Promise((r,j)=>{ const s=document.createElement("script"); s.src=src; s.onload=r; s.onerror=j; document.head.appendChild(s); });
+    add("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js")
+      .then(()=>add("https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"))
+      .then(()=>res(window.firebase)).catch(rej);
+  });
+}
+function cloudStatus(t,cls){ const el=$("#cloudStatus"); if(el){ el.textContent=t; el.className="cloud-status "+(cls||""); } }
+async function cloudConnect(cfg, room, pass){
+  cloudStatus("接続中…");
+  let fb; try{ fb=await loadFirebase(); }catch(e){ cloudStatus("接続できませんでした（ネットワーク／設定をご確認ください）","err"); return; }
+  try{
+    if(!cloud.app){ cloud.app = (fb.apps&&fb.apps.length)? fb.app() : fb.initializeApp(cfg); }
+    const db=fb.database(cloud.app);
+    cloud.ref=db.ref("kinship/rooms/"+room); cloud.pass=pass; cloud.lastV=0;
+    const snap=await new Promise((r,j)=>cloud.ref.once("value",r,j));
+    const val=snap.val();
+    if(val&&val.d){ // 既存ルーム：合言葉で復号して取り込み
+      let obj; try{ obj=await decObj(val.d,pass); }catch(e){ cloudStatus("合言葉が違うようです","err"); return; }
+      snapshot(); state=migrate(obj); filterSurname=null; cloud.lastV=val.v||0; save(); render(); fitToScreen();
+    }
+    cloud.on=true;
+    cloud.ref.on("value", s=>cloudRemote(s.val()));
+    if(!val||!val.d) cloudPushNow();      // 新規ルーム：現在の家系図を投入
+    cloudStatus("同期中：部屋「"+room+"」","ok");
+    $("#cloudConnect").hidden=true; $("#cloudLeave").hidden=false;
+    try{ localStorage.setItem("kinship.cloud", JSON.stringify({cfg,room})); }catch(e){}
+    toast("クラウド同期を開始しました");
+  }catch(e){ cloudStatus("接続に失敗しました（設定をご確認ください）","err"); }
+}
+function cloudRemote(val){
+  if(!cloud.on||!val||!val.d) return;
+  if(val.o===cloud.cid) return;             // 自分の書き込み
+  if((val.v||0)<=cloud.lastV) return;
+  decObj(val.d, cloud.pass).then(obj=>{
+    cloud.lastV=val.v||0; cloud.applying=true;
+    state=migrate(obj); save(); render();
+    cloud.applying=false;
+  }).catch(()=>{});
+}
+function cloudPushNow(){
+  if(!cloud.on||cloud.applying||!cloud.ref) return;
+  const v=Date.now(); cloud.lastV=v;
+  encObj({persons:state.persons,order:state.order,crests:state.crests,version:SCHEMA}, cloud.pass)
+    .then(d=>cloud.ref.set({v, o:cloud.cid, d})).catch(()=>{});
+}
+function cloudPush(){ if(!cloud.on||cloud.applying) return; clearTimeout(cloud.timer); cloud.timer=setTimeout(cloudPushNow,500); }
+function cloudLeave(){
+  if(cloud.ref){ try{ cloud.ref.off(); }catch(e){} }
+  cloud.on=false; cloud.ref=null; cloud.pass="";
+  $("#cloudConnect").hidden=false; $("#cloudLeave").hidden=true;
+  cloudStatus("未接続"); toast("クラウド同期を終了しました");
+}
 async function refreshShareLink(){
   const privacy=$("#sharePrivacy").checked;
   const prot=$("#sharePass").checked;
@@ -2422,6 +2524,24 @@ async function refreshPreview(){
 }
 $("#menuPoster").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openExport(); });
 $("#menuCraft").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openCraft(firstPersonOfSurname(dominantSurname())); });
+$("#menuCloud").addEventListener("click",()=>{ closeOverlay($("#menuOverlay")); openCloud(); });
+function openCloud(){
+  try{ const saved=JSON.parse(localStorage.getItem("kinship.cloud")||"{}");
+    if(saved.cfg && !$("#cloudCfg").value) $("#cloudCfg").value=typeof saved.cfg==="string"?saved.cfg:JSON.stringify(saved.cfg);
+    if(saved.room && !$("#cloudRoom").value) $("#cloudRoom").value=saved.room;
+  }catch(e){}
+  cloudStatus(cloud.on?"同期中":"未接続", cloud.on?"ok":"");
+  $("#cloudConnect").hidden=cloud.on; $("#cloudLeave").hidden=!cloud.on;
+  openOverlay($("#cloudOverlay"));
+}
+$("#cloudConnect").addEventListener("click",async()=>{
+  const room=$("#cloudRoom").value.trim(), pass=$("#cloudPass").value;
+  if(!room||!pass){ cloudStatus("部屋IDと合言葉を入力してください","err"); return; }
+  let cfg; try{ cfg=JSON.parse($("#cloudCfg").value.trim()); }catch(e){ cloudStatus("Firebase設定（config）の形式が正しくありません","err"); return; }
+  if(!cfg.databaseURL){ cloudStatus("config に databaseURL がありません（Realtime Databaseを有効化してください）","err"); return; }
+  await cloudConnect(cfg, room, pass);
+});
+$("#cloudLeave").addEventListener("click",cloudLeave);
 $("#expStory").addEventListener("click",async ()=>{
   const cv=await makePoster(1080,1920);
   cv.toBlob(b=>{ downloadBlob(b,"family-tree-story.png"); toast("ストーリーズ用の画像を保存しました"); },"image/png");
